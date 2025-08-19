@@ -21,7 +21,7 @@ function App() {
     <LanguageProvider>
       <AuthProvider>
         <GrantProvider>
-          <Router basename="/grantseeker-front">
+          <Router basename="/grantseeker-ai-platform">
             <div className="min-h-screen bg-gray-50 flex flex-col">
               <Header />
               <main className="flex-1">
