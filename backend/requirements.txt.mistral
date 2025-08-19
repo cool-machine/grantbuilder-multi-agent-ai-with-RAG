@@ -1,0 +1,22 @@
+# Azure Functions requirements
+azure-functions
+azure-functions-worker
+
+# Core dependencies (existing)
+openai>=1.52.0
+PyPDF2==3.0.1
+requests==2.31.0
+
+# NEW: Mistral 7B and Hugging Face dependencies
+torch>=2.0.0
+transformers>=4.35.0
+accelerate>=0.25.0
+sentencepiece>=0.1.99
+protobuf>=3.20.0
+
+# Optional: For faster inference
+bitsandbytes>=0.41.0  # For 4-bit quantization (GPU only)
+
+# Development and testing
+pytest==7.4.3
+python-dotenv==1.0.0

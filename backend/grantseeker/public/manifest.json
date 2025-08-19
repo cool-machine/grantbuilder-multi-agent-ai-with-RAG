@@ -1,0 +1,22 @@
+{
+  "name": "GrantSeeker - Platform for French Nonprofits",
+  "short_name": "GrantSeeker",
+  "description": "Discover and manage grant opportunities for French nonprofits",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#011F5B",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}
