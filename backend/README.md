@@ -1,6 +1,8 @@
 # GrantSeeker Backend - AI-Powered Grant Analysis System
 
-> Backend Azure Functions API for AI-powered grant analysis, document processing, and intelligent grant matching using OpenAI GPT models
+> Backend Azure Functions API for AI-powered grant analysis, document processing, and intelligent grant matching using Gemma 3 270M-IT
+
+**Status**: Testing GitHub Actions deployment with secrets configured
 
 ## 🎯 Overview
 
