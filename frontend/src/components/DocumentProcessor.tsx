@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, Upload, Brain, AlertCircle, CheckCircle, Eye, Download } from 'lucide-react';
+import { Upload, Brain, AlertCircle, CheckCircle, Eye } from 'lucide-react';
 
 interface DocumentAnalysisResult {
   success: boolean;
