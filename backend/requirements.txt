@@ -4,5 +4,11 @@
 azure-functions==1.18.0
 requests==2.31.0
 
+# Crawler service dependencies
+beautifulsoup4==4.12.2
+aiohttp==3.9.1
+sqlalchemy==2.0.23
+pandas==2.1.4
+
 # Note: All other dependencies removed for CI/CD compatibility
 # Full requirements available locally for development

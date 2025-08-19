@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useGrants, Grant } from '../contexts/GrantContext';
 import GlobalCrawlerDashboard from '../components/admin/GlobalCrawlerDashboard';
+import EnhancedCrawlerDashboard from '../components/admin/EnhancedCrawlerDashboard';
 import { Link } from 'react-router-dom';
 
 const AdminPage: React.FC = () => {
@@ -99,6 +100,7 @@ const AdminPage: React.FC = () => {
               { id: 'overview', label: t('Overview') },
               { id: 'grants', label: t('Grants') },
               { id: 'crawler', label: t('Global Web Crawler') },
+              { id: 'enhanced-crawler', label: t('Enhanced Crawler') },
               { id: 'users', label: t('Users') },
               { id: 'analytics', label: 'Analytics' }
             ].map((tab) => (
@@ -274,6 +276,9 @@ const AdminPage: React.FC = () => {
 
           {activeTab === 'crawler' && (
             <GlobalCrawlerDashboard />
+          )}
+          {activeTab === 'enhanced-crawler' && (
+            <EnhancedCrawlerDashboard />
           )}
 
           {activeTab === 'users' && (
