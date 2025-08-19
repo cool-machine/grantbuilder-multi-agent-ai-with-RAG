@@ -1,0 +1,16 @@
+# Azure Functions requirements
+azure-functions
+azure-functions-worker
+
+# Core dependencies (existing)
+openai>=1.52.0
+PyPDF2==3.0.1
+requests==2.31.0
+reportlab>=4.0.0  # For PDF generation in FillGrantForm
+
+# NEW: Gemma 3 270M via Hugging Face Inference API (free)
+# No heavy ML dependencies needed - just HTTP requests
+
+# Development and testing
+pytest==7.4.3
+python-dotenv==1.0.0
