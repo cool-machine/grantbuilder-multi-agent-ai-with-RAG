@@ -69,28 +69,55 @@ export const DocumentProcessor: React.FC = () => {
     try {
       const documentContent = await convertFileToText(selectedFile);
 
-      // Use Azure ML Workspace for document analysis
-      const response = await fetch('https://ocp10-grant-functions.azurewebsites.net/api/TokenizerFunction', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          text: documentContent.substring(0, 2000), // Limit text for processing
-          model_name: 'gpt2',
-          analysis_type: 'document_analysis',
-          metadata: {
-            fileName: selectedFile.name,
-            fileType: selectedFile.type
-          }
-        })
-      });
+      // Demo mode for GitHub Pages showcase
+      const isDemoMode = window.location.hostname.includes('github.io');
+      
+      let analysisResult;
+      if (isDemoMode) {
+        // Simulate processing time
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Generate demo analysis
+        analysisResult = {
+          success: true,
+          analysis: {
+            document_type: "Grant Application",
+            key_themes: ["Environmental Conservation", "Community Engagement", "Sustainability"],
+            funding_amount: "$75,000",
+            organization_type: "Non-profit",
+            project_focus: "AI-powered ecosystem monitoring"
+          },
+          summary: "This document outlines a comprehensive environmental conservation project that leverages artificial intelligence technologies to monitor local ecosystems. The project emphasizes community engagement and sustainable practices.",
+          recommendations: [
+            "Highlight the innovative AI technology aspects",
+            "Emphasize measurable environmental impact",
+            "Include community partnership details"
+          ]
+        };
+      } else {
+        // Production API call
+        const response = await fetch('https://ocp10-grant-functions.azurewebsites.net/api/TokenizerFunction', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            text: documentContent.substring(0, 2000), // Limit text for processing
+            model_name: 'gpt2',
+            analysis_type: 'document_analysis',
+            metadata: {
+              fileName: selectedFile.name,
+              fileType: selectedFile.type
+            }
+          })
+        });
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        analysisResult = await response.json();
       }
-
-      const tokenizerData = await response.json();
       
       // Create document analysis result based on Azure ML processing
       const documentResult: DocumentAnalysisResult = {
