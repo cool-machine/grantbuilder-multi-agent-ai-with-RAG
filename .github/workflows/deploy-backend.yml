@@ -64,7 +64,7 @@ jobs:
         find . -name "function.json" -exec dirname {} \;
 
     - name: 📤 Upload artifact for deployment job
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: azure-functions-app
         path: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
@@ -76,7 +76,7 @@ jobs:
     
     steps:
     - name: 📥 Download artifact from build job
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: azure-functions-app
         path: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}

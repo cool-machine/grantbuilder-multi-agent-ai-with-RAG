@@ -76,7 +76,7 @@ jobs:
       if: github.ref == 'refs/heads/main'
 
     - name: 📤 Upload Pages artifact
-      uses: actions/upload-pages-artifact@v3
+      uses: actions/upload-pages-artifact@v4
       with:
         path: ./frontend/dist
 
