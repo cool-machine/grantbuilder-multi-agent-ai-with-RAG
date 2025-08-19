@@ -63,8 +63,10 @@ local.settings.json
 
 # Python virtual environments
 venv/
+**/venv/
 env/
 ENV/
+.venv/
 
 # Temporary files
 *.tmp
