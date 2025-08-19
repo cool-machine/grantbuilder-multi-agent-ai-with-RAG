@@ -52,7 +52,7 @@ jobs:
       run: npm ci
 
     - name: 🔍 Run linter
-      run: npm run lint || echo "Linting issues found - continuing deployment"
+      run: npm run lint -- --max-warnings 50 || echo "Linting issues found - continuing deployment"
 
     - name: 🧪 Run tests
       run: npm run test -- --coverage --watchAll=false || echo "Tests failed - continuing deployment"
@@ -73,6 +73,7 @@ jobs:
 
     - name: 🔧 Setup GitHub Pages
       uses: actions/configure-pages@v4
+      if: github.ref == 'refs/heads/main'
 
     - name: 📤 Upload Pages artifact
       uses: actions/upload-pages-artifact@v3
