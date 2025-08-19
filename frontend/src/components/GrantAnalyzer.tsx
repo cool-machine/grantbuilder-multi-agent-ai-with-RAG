@@ -41,39 +41,28 @@ export const GrantAnalyzer: React.FC = () => {
     setError(null);
 
     try {
-      // Demo mode for GitHub Pages showcase
-      const isDemoMode = window.location.hostname.includes('github.io');
-      
-      let tokenizerData;
-      if (isDemoMode) {
-        // Simulate processing time
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        // Generate demo analysis
-        tokenizerData = {
-          success: true,
-          analysis: "This grant opportunity shows strong alignment with environmental and technology-focused nonprofits. The funding amount suggests medium-scale projects with emphasis on innovation and measurable impact."
-        };
-      } else {
-        // Production API call
-        const response = await fetch('https://ocp10-grant-functions.azurewebsites.net/api/TokenizerFunction', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            text: `Analyze this grant opportunity:\n\nDescription: ${grantDescription}\nOrganization Type: ${organizationType}\nFunding Amount: ${fundingAmount}\nDeadline: ${deadline}\n\nProvide analysis including eligibility requirements, competitiveness (low/medium/high), success factors, and recommended applicant profile.`,
-            model_name: 'gpt2',
-            analysis_type: 'grant_analysis'
-          })
-        });
+      // Call Azure Functions backend - NO FALLBACKS
+      const response = await fetch('https://ocp10-grant-functions.azurewebsites.net/api/AnalyzeGrant', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          grantDescription,
+          organizationType,
+          fundingAmount,
+          deadline,
+          analysis_depth: 'comprehensive'
+        })
+      });
 
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        tokenizerData = await response.json();
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Azure Functions error:', errorText);
+        throw new Error(`Azure Functions error (${response.status}): ${errorText || response.statusText}`);
       }
+
+      const tokenizerData = await response.json();
       
       // Create analysis structure based on Azure ML processing
       const analysisResult: GrantAnalysisResult = {

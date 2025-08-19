@@ -233,58 +233,23 @@ export const GrantFormFiller: React.FC<GrantFormFillerProps> = ({ grantId }) => 
         requestBody.ngo_profile_pdf = profilePdfData;
       }
 
-      // Demo mode for GitHub Pages showcase
-      const isDemoMode = window.location.hostname.includes('github.io');
-      
-      if (isDemoMode) {
-        // Simulate processing time
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        // Generate demo response
-        const demoData: FilledFormResponse = {
-          success: true,
-          original_fields: [
-            { field_name: "organization_name", field_type: "text" },
-            { field_name: "project_title", field_type: "text" },
-            { field_name: "project_description", field_type: "textarea" },
-            { field_name: "budget_amount", field_type: "number" }
-          ],
-          classified_fields: {
-            organization_info: ["organization_name"],
-            project_details: ["project_title", "project_description"],
-            financial: ["budget_amount"]
-          },
-          filled_responses: {
-            organization_name: ngoProfileData.organization_name || "Demo Organization",
-            project_title: "AI-Powered Environmental Conservation Initiative",
-            project_description: "An innovative project leveraging artificial intelligence to monitor and protect local ecosystems, with a focus on biodiversity preservation and sustainable community engagement.",
-            budget_amount: "75000"
-          },
-          pdf_analysis: {
-            total_pages: 3,
-            has_form_fields: true,
-            fields_detected: 4,
-            confidence_score: 0.95
-          }
-        };
-        setResult(demoData);
-      } else {
-        // Production API call
-        const response = await fetch('https://ocp10-grant-functions.azurewebsites.net/api/fillgrantform', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestBody)
-        });
+      // Call Azure Functions backend - NO FALLBACKS
+      const response = await fetch('https://ocp10-grant-functions.azurewebsites.net/api/fillgrantform', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      });
 
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const data: FilledFormResponse = await response.json();
-        setResult(data);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Azure Functions error:', errorText);
+        throw new Error(`Azure Functions error (${response.status}): ${errorText || response.statusText}`);
       }
+
+      const data: FilledFormResponse = await response.json();
+      setResult(data);
 
     } catch (err) {
       console.error('Grant form filling error:', err);
