@@ -1,16 +1,13 @@
-# Azure Functions requirements
-azure-functions
-azure-functions-worker
+# Minimal Azure Functions requirements for deployment
+azure-functions>=1.18.0
+azure-functions-worker>=1.0.0
 
-# Core dependencies (existing)
-openai>=1.52.0
-PyPDF2==3.0.1
-requests==2.31.0
-reportlab>=4.0.0  # For PDF generation in FillGrantForm
+# Core API dependencies
+requests>=2.31.0
+PyPDF2>=3.0.1
 
-# NEW: Gemma 3 270M via Hugging Face Inference API (free)
-# No heavy ML dependencies needed - just HTTP requests
+# Environment management
+python-dotenv>=1.0.0
 
-# Development and testing
-pytest==7.4.3
-python-dotenv==1.0.0
+# Note: Heavy dependencies (openai, reportlab, pytest) removed for CI/CD
+# Add back locally if needed for local development
