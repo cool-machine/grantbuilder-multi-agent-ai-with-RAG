@@ -1,0 +1,29 @@
+# Ollama Test Container - Simple Model for Fast Validation
+FROM ollama/ollama:latest
+
+LABEL maintainer="GrantSeeker AI Platform" \
+      description="Ollama test container with simple model for pipeline validation" \
+      version="1.0.0-ollama-test"
+
+# Set working directory
+WORKDIR /app
+
+# Install curl for health checks
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+# Copy startup script
+COPY ollama-test-startup.sh /app/startup.sh
+RUN chmod +x /app/startup.sh
+
+# Create ollama user data directory
+RUN mkdir -p /root/.ollama
+
+# Expose Ollama port
+EXPOSE 11434
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:11434/api/tags || exit 1
+
+# Start Ollama with simple model
+CMD ["/app/startup.sh"]

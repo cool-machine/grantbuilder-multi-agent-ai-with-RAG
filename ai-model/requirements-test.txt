@@ -1,0 +1,8 @@
+# Minimal requirements for simple test container
+# Only essential dependencies for fast deployment testing
+
+Flask==3.0.0
+Werkzeug==3.1.3
+requests==2.31.0
+
+# No ML dependencies - this is for pipeline testing only

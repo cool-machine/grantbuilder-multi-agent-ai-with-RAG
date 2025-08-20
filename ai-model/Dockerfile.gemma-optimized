@@ -1,0 +1,55 @@
+# Optimized Gemma 3 270M Container - Production Ready
+FROM python:3.10-slim
+
+LABEL maintainer="GrantSeeker AI Platform" \
+      description="Optimized Gemma 3 270M-IT container with enhanced startup and memory management" \
+      version="1.0.0-gemma-optimized"
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies (minimal)
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Copy optimized requirements
+COPY requirements-gemma.txt .
+
+# Install Python dependencies with optimizations
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements-gemma.txt
+
+# Copy optimized Flask API
+COPY flask_gemma_optimized.py .
+
+# Create directories with proper permissions
+RUN mkdir -p /app/cache /app/logs && \
+    chmod 755 /app/cache /app/logs
+
+# Set environment variables for optimization
+ENV PYTHONUNBUFFERED=1 \
+    FLASK_ENV=production \
+    HF_HOME=/app/cache \
+    TRANSFORMERS_CACHE=/app/cache \
+    PYTORCH_TRANSFORMERS_CACHE=/app/cache \
+    TOKENIZERS_PARALLELISM=false \
+    PYTHONDONTWRITEBYTECODE=1
+
+# Expose port 8000
+EXPOSE 8000
+
+# Optimized health check - longer startup time for model loading
+HEALTHCHECK --interval=30s --timeout=20s --start-period=600s --retries=10 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Use non-root user for security
+RUN useradd -m -u 1000 appuser && \
+    chown -R appuser:appuser /app && \
+    chmod -R 755 /app
+USER appuser
+
+# Run optimized Flask application
+CMD ["python", "flask_gemma_optimized.py"]

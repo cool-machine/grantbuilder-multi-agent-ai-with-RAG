@@ -23,38 +23,171 @@ GrantSeeker AI Platform is a comprehensive solution for nonprofits and researche
 
 ## 🏗️ Architecture
 
+### System Overview
+
 ```mermaid
 graph TB
-    A[User Browser] -->|HTTPS| B[React Frontend]
-    B -->|API Calls| C[Azure Functions Backend]
-    C -->|HTTP| D[Containerized AI API]
-    D -->|Inference| E[Gemma 3 270M-IT Model]
+    %% User Layer
+    U[👤 User] -->|Upload PDF| F[🌐 Frontend]
     
-    subgraph "Frontend Layer"
-        B --> B1[Grant Discovery]
-        B --> B2[Document Analysis]
-        B --> B3[Form Filling]
+    %% Frontend Layer
+    subgraph "Frontend Layer (GitHub Pages)"
+        F[React + TypeScript SPA]
+        F1[GrantFormFiller.tsx]
+        F2[GrantAnalyzer.tsx]
+        F3[DocumentProcessor.tsx]
+        F --> F1
+        F --> F2
+        F --> F3
     end
     
-    subgraph "Backend Layer"
-        C --> C1[TokenizerFunction]
-        C --> C2[AnalyzeGrant]
-        C --> C3[FillGrantForm]
-        C --> C4[ProcessDocument]
+    %% API Gateway
+    F -->|HTTPS API Calls| B[⚡ Azure Functions Backend]
+    
+    %% Backend Layer
+    subgraph "Backend Layer (Azure Functions - Python 3.9)"
+        B1[🔄 GemmaProxy]
+        B2[📝 FillGrantForm]
+        B3[📊 AnalyzeGrant]
+        B4[📄 ProcessDocument]
+        B5[🕷️ CrawlerService]
+        B6[🎯 GetMatches]
+        B7[✂️ TokenizerFunction]
+        
+        B --> B1
+        B --> B2
+        B --> B3
+        B --> B4
+        B --> B5
+        B --> B6
+        B --> B7
     end
     
-    subgraph "AI Layer"
-        D --> D1[Flask API Server]
-        D --> D2[Model Caching]
-        E --> E1[Text Generation]
-        E --> E2[Context Understanding]
+    %% AI Layer
+    B1 -->|HTTP Proxy| AI[🤖 AI Container]
+    B2 -->|Field Generation| B1
+    
+    subgraph "AI Layer (Azure Container Instance)"
+        AI[Flask API Server]
+        AI1[🧠 Gemma 3 270M-IT Model]
+        AI2[📥 Request Queue]
+        AI3[💾 Model Cache]
+        
+        AI --> AI1
+        AI --> AI2
+        AI --> AI3
     end
     
+    %% Infrastructure
     subgraph "Infrastructure"
-        F[GitHub Pages] --> B
-        G[Azure Functions] --> C
-        H[Azure Container Instances] --> D
+        I1[📦 GitHub Pages<br/>Static Hosting]
+        I2[☁️ Azure Functions<br/>Consumption Plan]
+        I3[🐳 Azure Container Instance<br/>13.89.105.77:8000]
     end
+    
+    %% Data Flow
+    F -.->|Hosts| I1
+    B -.->|Runs on| I2
+    AI -.->|Deployed on| I3
+    
+    %% Response Flow
+    AI1 -->|Generated Text| AI
+    AI -->|JSON Response| B1
+    B2 -->|Filled PDF| F
+    F -->|Download| U
+    
+    classDef frontend fill:#3B82F6,stroke:#1E40AF,stroke-width:2px,color:#fff
+    classDef backend fill:#F59E0B,stroke:#D97706,stroke-width:2px,color:#fff
+    classDef ai fill:#8B5CF6,stroke:#7C3AED,stroke-width:2px,color:#fff
+    classDef infra fill:#10B981,stroke:#059669,stroke-width:2px,color:#fff
+    classDef user fill:#EF4444,stroke:#DC2626,stroke-width:2px,color:#fff
+    
+    class F,F1,F2,F3 frontend
+    class B,B1,B2,B3,B4,B5,B6,B7 backend
+    class AI,AI1,AI2,AI3 ai
+    class I1,I2,I3 infra
+    class U user
+```
+
+### Data Flow Architecture
+
+```mermaid
+sequenceDiagram
+    participant U as 👤 User
+    participant F as 🌐 Frontend
+    participant B as ⚡ Backend
+    participant P as 🔄 GemmaProxy
+    participant A as 🤖 AI Container
+    
+    U->>F: Upload Grant Application PDF
+    F->>F: Convert PDF to Base64
+    F->>B: POST /api/fillgrantform
+    Note over B: FillGrantForm Function
+    B->>B: Extract PDF fields (PyPDF2)
+    B->>B: Parse with 24 field patterns
+    
+    loop For each field
+        B->>P: Generate field content
+        P->>A: POST /generate with prompt
+        A->>A: Gemma 3 270M-IT inference
+        A-->>P: Generated text response
+        P-->>B: Field content
+    end
+    
+    B->>B: Create filled PDF (reportlab)
+    B-->>F: Return filled PDF (base64)
+    F->>F: Convert to downloadable file
+    F-->>U: Download completed application
+```
+
+### Component Architecture
+
+```mermaid
+flowchart LR
+    subgraph "🎨 Frontend Components"
+        FC[App.tsx] --> FG[GrantFormFiller.tsx]
+        FC --> FA[GrantAnalyzer.tsx]
+        FC --> FD[DocumentProcessor.tsx]
+        FC --> FAdmin[Admin Dashboard]
+    end
+    
+    subgraph "🔧 Backend Functions"
+        BF[Azure Functions App] --> BG[GemmaProxy/]
+        BF --> BFF[FillGrantForm/]
+        BF --> BA[AnalyzeGrant/]
+        BF --> BP[ProcessDocument/]
+        BF --> BC[CrawlerService/]
+    end
+    
+    subgraph "🤖 AI Infrastructure"
+        AC[Azure Container] --> AF[Flask Server]
+        AF --> AM[Gemma Model]
+        AF --> AQ[Request Queue]
+        AF --> ACC[Model Cache]
+    end
+    
+    subgraph "📦 Dependencies"
+        D1[PyPDF2 - PDF Processing]
+        D2[reportlab - PDF Generation]  
+        D3[requests - HTTP Client]
+        D4[transformers - Model Loading]
+        D5[torch - ML Framework]
+    end
+    
+    FG -.->|API Calls| BFF
+    FA -.->|API Calls| BA
+    FD -.->|API Calls| BP
+    
+    BFF --> BG
+    BA --> BG
+    BP --> BG
+    BG -.->|HTTP Proxy| AF
+    
+    BFF -.-> D1
+    BFF -.-> D2
+    BG -.-> D3
+    AM -.-> D4
+    AM -.-> D5
 ```
 
 ## 🚀 Quick Start

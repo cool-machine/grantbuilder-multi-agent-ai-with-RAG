@@ -10,12 +10,11 @@ import torch
 from flask import Flask, request, jsonify
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-# Configure logging
+# Configure logging - use stdout for container deployment
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('/app/logs/api.log'),
         logging.StreamHandler()
     ]
 )
