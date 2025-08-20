@@ -25,8 +25,8 @@ def call_local_gemma_model(prompt: str) -> dict:
     
     payload = {
         "prompt": prompt,
-        "max_new_tokens": 300,
-        "temperature": 0.7
+        "max_new_tokens": 100,
+        "temperature": 0.5
     }
     
     headers = {
@@ -647,11 +647,18 @@ def generate_field_responses(classified_fields: Dict, enhanced_ngo_profile: Dict
                 # Get Gemma API response
                 try:
                     # Create more directive prompt that forces specific content generation
-                    full_prompt = f"""You are an expert grant writer. Generate ONLY the specific content requested, not instructions or placeholders.
+                    full_prompt = f"""TASK: Fill out this grant application field with specific, realistic content.
 
 {prompt}
 
-IMPORTANT: Provide only the actual content for this field. Do not include the field name, do not say "Please provide...", do not give instructions. Just write the specific content that would go in this field."""
+INSTRUCTIONS: 
+- Write ONLY the field content, not explanations
+- Be specific and concrete, not generic
+- Use realistic details based on the organization profile
+- Write as if you are the organization applying for the grant
+- Maximum 2-3 sentences for most fields
+
+RESPONSE:"""
                     result = call_local_gemma_model(full_prompt)
                     
                     if not result["success"]:
