@@ -12,12 +12,18 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     
     try:
         # Get configuration
-        flask_endpoint = os.environ.get('AZURE_ML_GEMMA_ENDPOINT', 'http://10.0.0.4:8000/generate')
+        flask_endpoint = os.environ.get('AZURE_ML_GEMMA_ENDPOINT', 'http://10.0.0.4:8000')
         auth_key = os.environ.get('AZURE_ML_GEMMA_KEY', '')
+        
+        # Ensure endpoint has /generate for POST requests
+        if not flask_endpoint.endswith('/generate') and not flask_endpoint.endswith('/health'):
+            generate_endpoint = flask_endpoint + '/generate'
+        else:
+            generate_endpoint = flask_endpoint
         
         # Determine API type
         is_managed_endpoint = 'inference.ml.azure.com' in flask_endpoint
-        is_flask_api = flask_endpoint.startswith('http://10.0.0.4:8000') or flask_endpoint.startswith('http://132.196.98.227:8000')
+        is_flask_api = '13.89.105.77:8000' in flask_endpoint or flask_endpoint.startswith('http://10.0.0.4:8000') or flask_endpoint.startswith('http://132.196.98.227:8000')
         
         # Handle GET requests (health check)
         if req.method == 'GET':
@@ -36,7 +42,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 )
             else:
                 # Flask API health check
-                health_url = flask_endpoint.replace('/generate', '/health')
+                health_url = flask_endpoint + '/health'
                 try:
                     response = requests.get(health_url, timeout=10)
                     if response.status_code == 200:
@@ -81,7 +87,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                         mimetype="application/json"
                     )
                 
-                logging.info(f'📤 Forwarding request to: {flask_endpoint}')
+                logging.info(f'📤 Forwarding request to: {generate_endpoint}')
                 
                 if is_managed_endpoint:
                     # Azure ML Managed Endpoint format
@@ -103,7 +109,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     }
                     
                     response = requests.post(
-                        flask_endpoint,
+                        generate_endpoint,
                         json=managed_payload,
                         timeout=60,
                         headers=headers
@@ -111,7 +117,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 else:
                     # Flask API format
                     response = requests.post(
-                        flask_endpoint,
+                        generate_endpoint,
                         json=req_body,
                         timeout=60,  # 60 seconds for model generation
                         headers={'Content-Type': 'application/json'}

@@ -4,6 +4,10 @@
 azure-functions==1.18.0
 requests==2.31.0
 
+# PDF processing dependencies
+PyPDF2==3.0.1
+reportlab==4.0.4
+
 # Crawler service dependencies
 beautifulsoup4==4.12.2
 aiohttp==3.9.1

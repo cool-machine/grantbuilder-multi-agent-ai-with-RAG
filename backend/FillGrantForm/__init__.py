@@ -540,16 +540,47 @@ def infer_fields_from_text(pdf_reader) -> List[Dict]:
         for page in pdf_reader.pages:
             full_text += page.extract_text() + "\n"
         
-        # Common grant form field patterns
+        logging.info(f"Extracted {len(full_text)} characters of text from PDF")
+        logging.info(f"First 500 chars: {full_text[:500]}")
+        
+        if len(full_text.strip()) < 10:
+            raise Exception(f"PDF contains insufficient text content ({len(full_text.strip())} chars). The PDF might be image-based or corrupted.")
+        
+        # Comprehensive grant form field patterns - more variations
         field_patterns = [
-            {"pattern": r"organization.*name", "name": "organization_name", "type": "text"},
-            {"pattern": r"project.*title", "name": "project_title", "type": "text"},
-            {"pattern": r"mission.*statement", "name": "mission_statement", "type": "textarea"},
-            {"pattern": r"project.*description", "name": "project_description", "type": "textarea"},
-            {"pattern": r"total.*budget|requested.*amount", "name": "requested_amount", "type": "number"},
-            {"pattern": r"project.*duration", "name": "project_duration", "type": "text"},
-            {"pattern": r"target.*population", "name": "target_population", "type": "textarea"},
-            {"pattern": r"expected.*outcomes", "name": "expected_outcomes", "type": "textarea"},
+            # Organization identifiers
+            {"pattern": r"organization.*name|agency.*name|applicant.*name|name.*organization|name.*agency|entity.*name", "name": "organization_name", "type": "text"},
+            {"pattern": r"organization.*address|agency.*address|applicant.*address|mailing.*address|address.*organization", "name": "organization_address", "type": "text"},
+            {"pattern": r"tax.*id|ein|federal.*id|employer.*id|tax.*identification", "name": "tax_id", "type": "text"},
+            {"pattern": r"contact.*person|primary.*contact|project.*director|principal.*investigator", "name": "contact_person", "type": "text"},
+            {"pattern": r"phone.*number|telephone|contact.*phone", "name": "phone_number", "type": "text"},
+            {"pattern": r"email.*address|contact.*email|e-mail", "name": "email_address", "type": "text"},
+            
+            # Project identifiers
+            {"pattern": r"project.*title|program.*title|initiative.*title|grant.*title|proposal.*title", "name": "project_title", "type": "text"},
+            {"pattern": r"project.*summary|executive.*summary|program.*summary|brief.*description", "name": "project_summary", "type": "textarea"},
+            {"pattern": r"project.*description|program.*description|detailed.*description|project.*narrative", "name": "project_description", "type": "textarea"},
+            {"pattern": r"project.*goals|program.*goals|objectives|aims", "name": "project_goals", "type": "textarea"},
+            {"pattern": r"project.*duration|grant.*period|project.*period|timeline|timeframe", "name": "project_duration", "type": "text"},
+            {"pattern": r"start.*date|begin.*date|commencement.*date", "name": "start_date", "type": "date"},
+            {"pattern": r"end.*date|completion.*date|finish.*date", "name": "end_date", "type": "date"},
+            
+            # Financial information
+            {"pattern": r"total.*budget|requested.*amount|grant.*amount|funding.*request|budget.*total|amount.*requested", "name": "requested_amount", "type": "number"},
+            {"pattern": r"matching.*funds|match.*funds|cost.*share|local.*contribution", "name": "matching_funds", "type": "number"},
+            {"pattern": r"budget.*justification|budget.*narrative|financial.*plan", "name": "budget_justification", "type": "textarea"},
+            
+            # Program details
+            {"pattern": r"target.*population|beneficiaries|target.*audience|served.*population|participants", "name": "target_population", "type": "textarea"},
+            {"pattern": r"expected.*outcomes|anticipated.*results|expected.*impact|program.*outcomes", "name": "expected_outcomes", "type": "textarea"},
+            {"pattern": r"evaluation.*plan|assessment.*plan|monitoring.*plan|evaluation.*methods", "name": "evaluation_plan", "type": "textarea"},
+            {"pattern": r"sustainability.*plan|continuation.*plan|long.*term.*plan", "name": "sustainability_plan", "type": "textarea"},
+            
+            # Organization background
+            {"pattern": r"mission.*statement|organizational.*mission|agency.*mission|purpose", "name": "mission_statement", "type": "textarea"},
+            {"pattern": r"organization.*history|organizational.*background|agency.*background", "name": "organization_background", "type": "textarea"},
+            {"pattern": r"previous.*experience|prior.*work|relevant.*experience|track.*record", "name": "previous_experience", "type": "textarea"},
+            {"pattern": r"staff.*qualifications|personnel|team.*members|key.*staff", "name": "staff_qualifications", "type": "textarea"}
         ]
         
         inferred_fields = []
@@ -567,7 +598,9 @@ def infer_fields_from_text(pdf_reader) -> List[Dict]:
         
         # NO FALLBACKS - raise error if no fields inferred
         if not inferred_fields:
-            raise Exception("No form fields could be inferred from PDF text content")
+            # Provide more helpful error message with sample text for debugging
+            sample_text = full_text[:500].replace('\n', ' ').replace('\r', ' ')
+            raise Exception(f"No form fields could be inferred from PDF text content. Text length: {len(full_text)} chars. Sample text: '{sample_text}...'")
         
         logging.info(f"Inferred {len(inferred_fields)} fields from PDF text")
         return inferred_fields
