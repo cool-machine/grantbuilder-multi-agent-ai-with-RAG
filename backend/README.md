@@ -392,7 +392,6 @@ grantseeker-back/
 ├── requirements.txt           # Python dependencies
 ├── host.json                  # Azure Functions configuration
 ├── deploy_enhanced.sh         # Infrastructure deployment script
-├── CLAUDE.md                  # Project memory and documentation
 └── README.md                  # This file
 ```
 
@@ -411,7 +410,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🆘 Support
 
 ### Documentation
-- **Project Memory**: See [CLAUDE.md](CLAUDE.md) for complete development history
 - **Azure Functions**: [Official Documentation](https://docs.microsoft.com/en-us/azure/azure-functions/)
 - **Azure OpenAI**: [Service Documentation](https://docs.microsoft.com/en-us/azure/cognitive-services/openai/)
 
