@@ -16,47 +16,26 @@ from datetime import datetime
 import requests
 
 def call_local_gemma_model(prompt: str) -> dict:
-    """Call Gemma 3 270M model on Azure ML Managed Endpoint - NO FALLBACKS"""
+    """Call Gemma 3 270M model via GemmaProxy - NO FALLBACKS"""
     
-    # Connect to Azure ML Managed Endpoint - explicit error if not available
     import requests
-    import os
     
-    # Get Azure ML model endpoint and key from environment
-    azure_ml_endpoint = os.environ.get('AZURE_ML_GEMMA_ENDPOINT')
-    azure_ml_key = os.environ.get('AZURE_ML_GEMMA_KEY')
-    
-    if not azure_ml_endpoint:
-        return {
-            "success": False, 
-            "error": "AZURE_ML_GEMMA_ENDPOINT environment variable not set",
-            "error_type": "configuration_error",
-            "required_action": "Set AZURE_ML_GEMMA_ENDPOINT to point to Azure ML managed endpoint"
-        }
-    
-    if not azure_ml_key:
-        return {
-            "success": False, 
-            "error": "AZURE_ML_GEMMA_KEY environment variable not set",
-            "error_type": "configuration_error",
-            "required_action": "Set AZURE_ML_GEMMA_KEY to Azure ML endpoint authentication key"
-        }
+    # Use the GemmaProxy endpoint - same function app
+    gemma_proxy_url = "https://ocp10-grant-functions.azurewebsites.net/api/gemmaproxy"
     
     payload = {
         "prompt": prompt,
         "max_new_tokens": 300,
-        "temperature": 0.7,
-        "do_sample": True
+        "temperature": 0.7
     }
     
     headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {azure_ml_key}"
+        "Content-Type": "application/json"
     }
     
     try:
-        logging.info(f"Calling Azure ML Managed Endpoint: {azure_ml_endpoint}")
-        response = requests.post(azure_ml_endpoint, json=payload, headers=headers, timeout=120)
+        logging.info(f"Calling GemmaProxy: {gemma_proxy_url}")
+        response = requests.post(gemma_proxy_url, json=payload, headers=headers, timeout=120)
         
         if response.status_code == 200:
             result = response.json()
@@ -64,18 +43,18 @@ def call_local_gemma_model(prompt: str) -> dict:
         else:
             return {
                 "success": False, 
-                "error": f"Azure ML Managed Endpoint Error {response.status_code}: {response.text}",
+                "error": f"GemmaProxy Error {response.status_code}: {response.text}",
                 "error_type": "api_error",
-                "endpoint": azure_ml_endpoint,
+                "endpoint": gemma_proxy_url,
                 "status_code": response.status_code
             }
             
     except Exception as e:
         return {
             "success": False, 
-            "error": f"Azure ML Managed Endpoint connection failed: {str(e)}",
+            "error": f"GemmaProxy connection failed: {str(e)}",
             "error_type": "connection_error",
-            "endpoint": azure_ml_endpoint
+            "endpoint": gemma_proxy_url
         }
 
 # PDF utilities
