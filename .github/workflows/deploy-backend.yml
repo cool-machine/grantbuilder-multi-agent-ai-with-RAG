@@ -49,10 +49,14 @@ jobs:
 
     - name: 📁 Prepare deployment package
       run: |
-        echo "📦 Preparing Azure Functions deployment package..."
+        echo "📦 Preparing Azure Functions deployment package with dependencies..."
         ls -la
         echo "Function directories:"
         find . -name "function.json" -exec dirname {} \;
+        echo "Installing dependencies to deployment package..."
+        pip install -r requirements.txt --target .
+        echo "Package contents:"
+        ls -la | head -20
 
     - name: 📤 Upload artifact for deployment job
       uses: actions/upload-artifact@v4
