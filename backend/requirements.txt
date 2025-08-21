@@ -1,8 +1,17 @@
-# Ultra-minimal requirements for GitHub Actions deployment
-# Only the absolute essentials to avoid grpcio compilation issues
-
+# Azure Functions Core Requirements
 azure-functions==1.18.0
 requests==2.31.0
 
-# Note: All other dependencies removed for CI/CD compatibility
-# Full requirements available locally for development
+# PDF Processing (Required for FillGrantForm)
+PyPDF2==3.0.1
+reportlab==4.0.4
+
+# OpenAI Integration (Required for some functions)
+openai>=1.52.0
+
+# Azure Storage (Required for ProcessDocument)
+azure-storage-blob>=12.14.0
+azure-identity>=1.13.0
+
+# Core Python Dependencies
+python-dotenv==1.0.0
