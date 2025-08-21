@@ -493,10 +493,18 @@ def parse_pdf_form_fields(pdf_data: str) -> List[Dict]:
     """
     try:
         # Decode base64 PDF data
-        pdf_bytes = base64.b64decode(pdf_data)
+        try:
+            pdf_bytes = base64.b64decode(pdf_data)
+            logging.info(f"Decoded PDF data: {len(pdf_bytes)} bytes")
+        except Exception as e:
+            raise Exception(f"Failed to decode base64 PDF data: {str(e)}")
         
-        # Create PDF reader
-        pdf_reader = PyPDF2.PdfReader(io.BytesIO(pdf_bytes))
+        # Create PDF reader with better error handling
+        try:
+            pdf_reader = PyPDF2.PdfReader(io.BytesIO(pdf_bytes))
+            logging.info(f"PDF loaded successfully: {len(pdf_reader.pages)} pages")
+        except Exception as e:
+            raise Exception(f"Failed to read PDF with PyPDF2 (possibly corrupted PDF): {str(e)}")
         
         form_fields = []
         
@@ -537,8 +545,13 @@ def infer_fields_from_text(pdf_reader) -> List[Dict]:
     try:
         # Extract all text from PDF
         full_text = ""
-        for page in pdf_reader.pages:
-            full_text += page.extract_text() + "\n"
+        try:
+            for page_num, page in enumerate(pdf_reader.pages):
+                page_text = page.extract_text()
+                full_text += page_text + "\n"
+                logging.debug(f"Page {page_num + 1} text length: {len(page_text)}")
+        except Exception as e:
+            raise Exception(f"Failed to extract text from PDF pages: {str(e)}")
         
         # Common grant form field patterns - expanded for better matching
         field_patterns = [
