@@ -9,9 +9,10 @@ reportlab==4.0.4
 # OpenAI Integration (Required for some functions)
 openai>=1.52.0
 
-# Azure Storage (Required for ProcessDocument)
+# Azure Services (Required for various functions)
 azure-storage-blob>=12.14.0
 azure-identity>=1.13.0
+azure-cosmos>=4.5.0
 
 # Core Python Dependencies
 python-dotenv==1.0.0
