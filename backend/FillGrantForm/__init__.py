@@ -540,16 +540,18 @@ def infer_fields_from_text(pdf_reader) -> List[Dict]:
         for page in pdf_reader.pages:
             full_text += page.extract_text() + "\n"
         
-        # Common grant form field patterns
+        # Common grant form field patterns - expanded for better matching
         field_patterns = [
-            {"pattern": r"organization.*name", "name": "organization_name", "type": "text"},
-            {"pattern": r"project.*title", "name": "project_title", "type": "text"},
-            {"pattern": r"mission.*statement", "name": "mission_statement", "type": "textarea"},
-            {"pattern": r"project.*description", "name": "project_description", "type": "textarea"},
-            {"pattern": r"total.*budget|requested.*amount", "name": "requested_amount", "type": "number"},
-            {"pattern": r"project.*duration", "name": "project_duration", "type": "text"},
-            {"pattern": r"target.*population", "name": "target_population", "type": "textarea"},
-            {"pattern": r"expected.*outcomes", "name": "expected_outcomes", "type": "textarea"},
+            {"pattern": r"organization|applicant|entity|agency|nonprofit|ngo|name", "name": "organization_name", "type": "text"},
+            {"pattern": r"project|program|initiative|proposal|title|subject", "name": "project_title", "type": "text"},
+            {"pattern": r"mission|purpose|vision|statement|about|overview", "name": "mission_statement", "type": "textarea"},
+            {"pattern": r"description|summary|details|narrative|background|abstract", "name": "project_description", "type": "textarea"},
+            {"pattern": r"budget|amount|cost|funding|financial|money|dollar|\$|expense", "name": "requested_amount", "type": "number"},
+            {"pattern": r"duration|timeline|period|timeframe|length|term|months|years", "name": "project_duration", "type": "text"},
+            {"pattern": r"target|beneficiary|population|audience|community|served|impact", "name": "target_population", "type": "textarea"},
+            {"pattern": r"outcomes|results|goals|objectives|impact|deliverables|achievements", "name": "expected_outcomes", "type": "textarea"},
+            {"pattern": r"contact|phone|email|address|location|director|coordinator", "name": "contact_information", "type": "text"},
+            {"pattern": r"experience|history|background|qualifications|expertise|track", "name": "organization_background", "type": "textarea"},
         ]
         
         inferred_fields = []
@@ -565,9 +567,11 @@ def infer_fields_from_text(pdf_reader) -> List[Dict]:
                     "inferred": True
                 })
         
-        # NO FALLBACKS - raise error if no fields inferred
+        # Enhanced error reporting if no fields inferred
         if not inferred_fields:
-            raise Exception("No form fields could be inferred from PDF text content")
+            text_sample = full_text[:500].strip() if full_text.strip() else "NO TEXT EXTRACTED"
+            logging.error(f"Failed to infer fields. PDF text sample: {text_sample}")
+            raise Exception(f"No form fields could be inferred from PDF text content. Text sample: {text_sample}")
         
         logging.info(f"Inferred {len(inferred_fields)} fields from PDF text")
         return inferred_fields
