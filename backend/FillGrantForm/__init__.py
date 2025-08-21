@@ -79,7 +79,8 @@ def call_local_gemma_model(prompt: str) -> dict:
         }
 
 # PDF utilities
-from .pdf_utils import PDFFormFiller, PDFFormAnalyzer
+# Lazy imports to prevent startup failures if dependencies are missing
+# from .pdf_utils import PDFFormFiller, PDFFormAnalyzer
 
 def enhance_ngo_profile(base_profile: Dict, data_sources: Dict, ngo_profile_pdf: str = None) -> Dict:
     """
@@ -418,8 +419,13 @@ def process_grant_form(pdf_data: str, enhanced_ngo_profile: Dict, grant_context:
         # Step 4: Generate filled PDF using proper PDF generation
         try:
             logging.info("Attempting to import and use PDFFormFiller...")
-            pdf_filler = PDFFormFiller()
-            logging.info("PDFFormFiller created successfully")
+            try:
+                from .pdf_utils import PDFFormFiller
+                pdf_filler = PDFFormFiller()
+                logging.info("PDFFormFiller created successfully")
+            except ImportError as e:
+                logging.error(f"Failed to import PDFFormFiller (reportlab dependency issue): {str(e)}")
+                raise Exception(f"PDF utilities not available due to missing dependencies: {str(e)}")
             pdf_success, filled_pdf_data, fill_method = pdf_filler.fill_pdf_form(pdf_data, filled_responses)
             logging.info(f"PDF generation result: success={pdf_success}, method={fill_method}")
             
@@ -439,6 +445,11 @@ def process_grant_form(pdf_data: str, enhanced_ngo_profile: Dict, grant_context:
         # Step 5: Analyze original PDF structure
         # PDF analysis with explicit error handling - NO FALLBACKS
         try:
+            try:
+                from .pdf_utils import PDFFormAnalyzer
+            except ImportError as e:
+                logging.error(f"Failed to import PDFFormAnalyzer: {str(e)}")
+                raise Exception(f"PDF analysis not available due to missing dependencies: {str(e)}")
             pdf_analysis = PDFFormAnalyzer.analyze_pdf_structure(pdf_data)
         except Exception as e:
             logging.error(f"PDF analysis failed: {str(e)}")
