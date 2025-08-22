@@ -1,14 +1,34 @@
 # GrantSeeker AI Platform - Git Ignore
 
-# Claude Development Files (keep local only)
-CLAUDE.md
-**/CLAUDE.md
-CLAUDE-dev.md
-**/CLAUDE-dev.md
+# AI Assistant Development Files (keep local only)
+*-dev.md
+**/*-dev.md
 FULL_CHAT_HISTORY.md
 **/FULL_CHAT_HISTORY.md
 PROJECT_MEMORY.md
 **/PROJECT_MEMORY.md
+*session*.md
+**/*session*.md
+*memory*.md
+**/*memory*.md
+
+# Agentic Code Writer Provider Files
+*claude*
+**/claude/**
+*cursor*
+**/cursor/**
+*windsurf*
+**/windsurf/**
+*codeium*
+**/codeium/**
+*copilot*
+**/copilot/**
+*assistant*
+**/assistant/**
+*.anthropic*
+**/anthropic/**
+*.openai*
+**/openai/**
 
 # Dependencies
 node_modules/
