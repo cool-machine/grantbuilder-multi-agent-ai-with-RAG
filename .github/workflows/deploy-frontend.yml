@@ -72,11 +72,11 @@ jobs:
         echo "CSS size: $(du -sh dist/assets/*.css 2>/dev/null | head -1 || echo 'No CSS files')"
 
     - name: 🔧 Setup GitHub Pages
-      uses: actions/configure-pages@v4
+      uses: actions/configure-pages@v3
       if: github.ref == 'refs/heads/main'
 
     - name: 📤 Upload Pages artifact
-      uses: actions/upload-pages-artifact@v4
+      uses: actions/upload-pages-artifact@v3
       with:
         path: ./frontend/dist
 
@@ -91,7 +91,7 @@ jobs:
     steps:
     - name: 🌐 Deploy to GitHub Pages
       id: deployment
-      uses: actions/deploy-pages@v4
+      uses: actions/deploy-pages@v3
 
     - name: ✅ Deployment success notification
       run: |
