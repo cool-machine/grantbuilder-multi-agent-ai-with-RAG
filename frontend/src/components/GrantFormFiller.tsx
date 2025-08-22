@@ -234,7 +234,7 @@ export const GrantFormFiller: React.FC<GrantFormFillerProps> = ({ grantId }) => 
       }
 
       // Call Azure Functions backend - NO FALLBACKS
-      const response = await fetch('https://ocp10-grant-functions.azurewebsites.net/api/fillgrantform', {
+      const response = await fetch('https://ocp10-grant-functions.azurewebsites.net/api/FillGrantForm', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
