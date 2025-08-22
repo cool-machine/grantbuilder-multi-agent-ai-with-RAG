@@ -3,7 +3,7 @@ name: 🚀 Deploy Frontend to GitHub Pages
 on:
   push:
     branches: [ main ]
-    paths: [ 'src/**', 'public/**', 'index.html', 'package.json', 'vite.config.ts' ]
+    paths: [ 'frontend/**' ]
   workflow_dispatch:
     inputs:
       environment:
@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: .
+        working-directory: ./frontend
     
     steps:
     - name: 📥 Checkout repository
@@ -47,7 +47,7 @@ jobs:
         node-version: '18'
 
     - name: 📦 Install dependencies
-      run: npm install
+      run: npm ci
 
     - name: 🔍 Run linter
       run: npm run lint -- --max-warnings 50 || echo "Linting issues found - continuing deployment"
@@ -76,7 +76,7 @@ jobs:
     - name: 📤 Upload Pages artifact
       uses: actions/upload-pages-artifact@v3
       with:
-        path: ./dist
+        path: ./frontend/dist
 
   deploy:
     environment:
