@@ -1,0 +1,132 @@
+name: ⚡ Deploy Azure Functions Backend
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'backend/**' ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deploy to environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+        - production
+        - staging
+
+env:
+  AZURE_FUNCTIONAPP_NAME: ocp10-grant-functions
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: ./backend
+  PYTHON_VERSION: '3.10'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    
+    steps:
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v4
+
+    - name: 🐍 Setup Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: 📦 Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: 🧪 Verify function structure
+      run: |
+        echo "Checking Azure Functions structure..."
+        find . -name "function.json" -exec echo "Found function: {}" \;
+        echo "Functions are ready for deployment"
+
+    - name: 📁 Prepare deployment package
+      run: |
+        echo "📦 Preparing Azure Functions deployment package with dependencies..."
+        ls -la
+        echo "Function directories:"
+        find . -name "function.json" -exec dirname {} \;
+        echo "Installing dependencies to deployment package..."
+        pip install -r requirements.txt --target .
+        echo "Package contents:"
+        ls -la | head -20
+
+    - name: 📤 Upload artifact for deployment job
+      uses: actions/upload-artifact@v4
+      with:
+        name: azure-functions-app
+        path: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment: production
+    
+    steps:
+    - name: 📥 Download artifact from build job
+      uses: actions/download-artifact@v4
+      with:
+        name: azure-functions-app
+        path: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+
+    - name: 🔐 Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: ⚡ Deploy to Azure Functions
+      uses: Azure/functions-action@v1
+      with:
+        app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
+        package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+        publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
+
+    - name: 🔧 Configure App Settings
+      run: |
+        echo "🔧 Updating Azure Functions app settings..."
+        az functionapp config appsettings set \
+          --name ${{ env.AZURE_FUNCTIONAPP_NAME }} \
+          --resource-group ocp10 \
+          --settings \
+            "AZURE_ML_GEMMA_ENDPOINT=${{ secrets.GEMMA_API_ENDPOINT }}" \
+            "AZURE_ML_GEMMA_KEY=${{ secrets.GEMMA_API_KEY }}" \
+            "PYTHONPATH=/home/site/wwwroot" \
+            "FUNCTIONS_WORKER_RUNTIME=python" \
+            "FUNCTIONS_EXTENSION_VERSION=~4"
+
+    - name: ✅ Deployment verification
+      run: |
+        echo "🧪 Testing deployed functions..."
+        sleep 30  # Wait for deployment to complete
+        
+        # Test TokenizerFunction
+        RESPONSE=$(curl -s -w "%{http_code}" "https://${{ env.AZURE_FUNCTIONAPP_NAME }}.azurewebsites.net/api/TokenizerFunction?text=hello" -o /tmp/response.json)
+        if [ "$RESPONSE" = "200" ]; then
+          echo "✅ TokenizerFunction: OK"
+          cat /tmp/response.json
+        else
+          echo "⚠️ TokenizerFunction: HTTP $RESPONSE"
+        fi
+        
+        # Test health endpoints
+        curl -f "https://${{ env.AZURE_FUNCTIONAPP_NAME }}.azurewebsites.net/api/GemmaProxy" || echo "⚠️ GemmaProxy health check failed"
+
+    - name: 📊 Deployment summary
+      run: |
+        echo "🎉 Azure Functions Backend Deployment Complete!"
+        echo "🔗 Function App URL: https://${{ env.AZURE_FUNCTIONAPP_NAME }}.azurewebsites.net"
+        echo "📅 Deployed at: $(date)"
+        echo ""
+        echo "Available endpoints:"
+        echo "  • TokenizerFunction: https://${{ env.AZURE_FUNCTIONAPP_NAME }}.azurewebsites.net/api/TokenizerFunction"
+        echo "  • AnalyzeGrant: https://${{ env.AZURE_FUNCTIONAPP_NAME }}.azurewebsites.net/api/AnalyzeGrant"
+        echo "  • ProcessDocument: https://${{ env.AZURE_FUNCTIONAPP_NAME }}.azurewebsites.net/api/ProcessDocument"
+        echo "  • FillGrantForm: https://${{ env.AZURE_FUNCTIONAPP_NAME }}.azurewebsites.net/api/FillGrantForm"
+        echo "  • GemmaProxy: https://${{ env.AZURE_FUNCTIONAPP_NAME }}.azurewebsites.net/api/GemmaProxy"

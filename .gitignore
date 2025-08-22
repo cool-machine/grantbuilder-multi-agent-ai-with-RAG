@@ -1,0 +1,94 @@
+# GrantSeeker AI Platform - Git Ignore
+
+# AI Assistant Development Files (keep local only)
+*-dev.md
+**/*-dev.md
+FULL_CHAT_HISTORY.md
+**/FULL_CHAT_HISTORY.md
+PROJECT_MEMORY.md
+**/PROJECT_MEMORY.md
+*session*.md
+**/*session*.md
+*memory*.md
+**/*memory*.md
+
+# Agentic Code Writer Provider Files
+*claude*
+**/claude/**
+*cursor*
+**/cursor/**
+*windsurf*
+**/windsurf/**
+*codeium*
+**/codeium/**
+*copilot*
+**/copilot/**
+*assistant*
+**/assistant/**
+*.anthropic*
+**/anthropic/**
+*.openai*
+**/openai/**
+
+# Dependencies
+node_modules/
+**/node_modules/
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Development
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build outputs
+dist/
+build/
+*.egg-info/
+.coverage
+htmlcov/
+
+# Logs
+*.log
+logs/
+**/*.log
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Azure Functions
+local.settings.json
+.azure/
+.azurefunctions/
+
+# Container development
+.dockerignore
+
+# Python virtual environments
+venv/
+**/venv/
+env/
+ENV/
+.venv/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
