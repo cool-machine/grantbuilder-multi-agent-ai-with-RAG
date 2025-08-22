@@ -3,7 +3,7 @@ name: 🚀 Deploy Frontend to GitHub Pages
 on:
   push:
     branches: [ main ]
-    paths: [ 'frontend/**' ]
+    paths: [ 'src/**', 'public/**', 'index.html', 'package.json', 'vite.config.ts' ]
   workflow_dispatch:
     inputs:
       environment:
@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./frontend
+        working-directory: .
     
     steps:
     - name: 📥 Checkout repository
@@ -46,7 +46,7 @@ jobs:
       with:
         node-version: '18'
         cache: 'npm'
-        cache-dependency-path: frontend/package-lock.json
+        cache-dependency-path: package-lock.json
 
     - name: 📦 Install dependencies
       run: npm ci
@@ -78,7 +78,7 @@ jobs:
     - name: 📤 Upload Pages artifact
       uses: actions/upload-pages-artifact@v3
       with:
-        path: ./frontend/dist
+        path: ./dist
 
   deploy:
     environment:
