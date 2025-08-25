@@ -15,4 +15,4 @@ azure-identity>=1.13.0
 azure-cosmos>=4.5.0
 
 # Core Python Dependencies
-python-dotenv==1.0.0
+python-dotenv==1.0.0# Last updated: Mon Aug 25 23:29:05 CEST 2025
