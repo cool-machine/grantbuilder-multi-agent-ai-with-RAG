@@ -22,7 +22,7 @@ function App() {
     <LanguageProvider>
       <AuthProvider>
         <GrantProvider>
-          <Router basename="/grantseeker-ai-platform">
+          <Router basename="/grantbuilder-multi-agent-ai-with-RAG">
             <div className="min-h-screen bg-gray-50 flex flex-col">
               <Header />
               <main className="flex-1">
