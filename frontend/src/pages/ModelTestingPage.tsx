@@ -1,28 +1,8 @@
 import React, { useState, useRef } from 'react';
-import { Upload, Send, Copy, Trash2, Settings, MessageSquare } from 'lucide-react';
+import { Upload, Send, Copy, Trash2, Settings, MessageSquare, Eye, Play } from 'lucide-react';
+import { ChatMessage, NGOProfile } from '../types';
 
 // Model Testing Playground - Interactive chat interface for prompt engineering
-
-interface ChatMessage {
-  id: string;
-  type: 'user' | 'assistant' | 'system';
-  content: string;
-  timestamp: Date;
-  extractedText?: string;
-  promptTemplate?: string;
-  finalPrompt?: string;
-}
-
-interface NGOProfile {
-  name: string;
-  mission: string;
-  focusAreas: string;
-  targetPopulation: string;
-  geographicScope: string;
-  established: string;
-  staff: string;
-  budget: string;
-}
 
 export default function ModelTestingPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -128,31 +108,29 @@ Please provide a professional, detailed response that aligns with the NGO's prof
     formData.append('file', file);
 
     try {
-      const response = await fetch(`${apiBaseUrl}/ProcessDocument`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error('PDF processing service is currently unavailable. Please use manual text input instead.');
-        }
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      setExtractedText(result.extracted_text || 'No text extracted from PDF');
+      // Use client-side PDF extraction to replicate Azure Function behavior
+      const { DocumentExtractor } = await import('../services/textExtraction');
+      const extractor = DocumentExtractor.getInstance();
       
+      // Extract text using the same approach as Azure Functions would
+      const extractedResult = await extractor.extractText(file, (status) => {
+        console.log('PDF Extraction Progress:', status);
+      });
+      
+      // Use the actual extracted text (this is what Azure Function would see)
+      const azureFunctionExtractedText = extractedResult.extractedText;
+      
+      setExtractedText(azureFunctionExtractedText);
       showToast({
-        title: "Document processed",
-        description: `Extracted ${result.extracted_text?.length || 0} characters from PDF.`
+        title: "PDF Extracted (Azure Function Style)",
+        description: `Extracted ${azureFunctionExtractedText.length} characters using same method as Azure Functions. Ready to send to model.`
       });
     } catch (error) {
-      console.error('Error processing document:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to process PDF document';
+      console.error('Error extracting PDF:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to extract PDF text';
       showToast({
-        title: "Upload failed",
-        description: errorMessage + " You can paste grant text manually instead.",
+        title: "PDF extraction failed",
+        description: errorMessage + " Please try a different PDF or use manual text input.",
         variant: "destructive"
       });
     } finally {
