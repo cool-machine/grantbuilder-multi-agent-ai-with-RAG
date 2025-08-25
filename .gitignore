@@ -30,6 +30,14 @@ PROJECT_MEMORY.md
 *.openai*
 **/openai/**
 
+# Claude Code Framework Files
+CLAUDE.md
+**/CLAUDE.md
+.claude.json
+**/.claude.json
+.claude/
+**/.claude/**
+
 # Dependencies
 node_modules/
 **/node_modules/

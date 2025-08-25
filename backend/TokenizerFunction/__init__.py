@@ -9,16 +9,8 @@ def call_local_azure_ml_gemma(text: str, analysis_type: str = "general") -> dict
     import requests
     import os
     
-    # Get Azure ML model endpoint from environment
-    azure_ml_endpoint = os.environ.get('AZURE_ML_GEMMA_ENDPOINT')
-    
-    if not azure_ml_endpoint:
-        return {
-            "success": False, 
-            "error": "AZURE_ML_GEMMA_ENDPOINT environment variable not set",
-            "error_type": "configuration_error",
-            "required_action": "Set AZURE_ML_GEMMA_ENDPOINT to point to local Gemma model service"
-        }
+    # Use ModelProxy for GPT-OSS-120B - no direct endpoint configuration needed
+    proxy_url = 'https://ocp10-grant-functions.azurewebsites.net/api/ModelProxy'
     
     # Create analysis-specific prompt
     if analysis_type == "grant_analysis":
@@ -60,27 +52,27 @@ Provide a clear, helpful analysis."""
     }
     
     try:
-        logging.info(f"Calling local Azure ML Gemma endpoint: {azure_ml_endpoint}")
-        response = requests.post(azure_ml_endpoint, json=payload, timeout=60)
+        logging.info(f"Calling ModelProxy for GPT-OSS-120B: {proxy_url}")
+        response = requests.post(proxy_url, json=payload, headers={"Content-Type": "application/json"}, timeout=60)
         
         if response.status_code == 200:
             result = response.json()
-            logging.info("✅ Local Azure ML Gemma call successful")
+            logging.info("✅ GPT-OSS-120B call successful")
             return {"success": True, "response": result.get("generated_text", "")}
         else:
             return {
                 "success": False, 
-                "error": f"Azure ML Gemma API Error {response.status_code}: {response.text}",
+                "error": f"GPT-OSS-120B API Error {response.status_code}: {response.text}",
                 "error_type": "api_error",
-                "endpoint": azure_ml_endpoint
+                "endpoint": proxy_url
             }
             
     except Exception as e:
         return {
             "success": False, 
-            "error": f"Azure ML Gemma connection failed: {str(e)}",
+            "error": f"GPT-OSS-120B connection failed: {str(e)}",
             "error_type": "connection_error",
-            "endpoint": azure_ml_endpoint
+            "endpoint": proxy_url
         }
 
 # REMOVED: analyze_with_gemma_api function (used HuggingFace API)
@@ -171,16 +163,15 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         method = req.method
         
         if method == "GET":
-            azure_ml_endpoint = os.environ.get('AZURE_ML_GEMMA_ENDPOINT', 'NOT_CONFIGURED')
             return func.HttpResponse(
                 json.dumps({
-                    "message": "Local Azure ML Gemma 3 270M-IT TokenizerFunction API",
-                    "status": "ENHANCED - Local Gemma 3 270M Instruct for grant analysis",
-                    "azure_ml_endpoint": azure_ml_endpoint,
+                    "message": "GPT-OSS-120B TokenizerFunction API",
+                    "status": "ENHANCED - GPT-OSS-120B for grant analysis",
+                    "azure_ml_endpoint": "https://ocp10-grant-functions.azurewebsites.net/api/ModelProxy",
                     "supported_methods": ["GET", "POST"],
-                    "models": ["simple", "gemma-3-270m-it"],
+                    "models": ["simple", "gpt-oss-120b"],
                     "analysis_types": ["general", "grant_analysis", "document_analysis"],
-                    "configuration_required": "AZURE_ML_GEMMA_ENDPOINT environment variable",
+                    "configuration": "Uses ModelProxy for GPT-OSS-120B access",
                     "usage": {
                         "POST": "/api/tokenizerfunction",
                         "body": {
@@ -238,7 +229,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     # Standard simple tokenization for all other models
                     result = simple_tokenize_text(text, model_name, return_tokens, return_token_ids)
                     result["gemma_available"] = True
-                    result["note"] = "Simple tokenization - Use model='gemma-3-270m-it' for AI analysis via local Azure ML instance"
+                    result["note"] = "Simple tokenization - Use model='gpt-oss-120b' for AI analysis via GPT-OSS-120B"
                 
                 status_code = 200 if result.get('success') else 500
                 return func.HttpResponse(

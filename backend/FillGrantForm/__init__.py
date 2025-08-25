@@ -16,66 +16,81 @@ from datetime import datetime
 import requests
 
 def call_local_gemma_model(prompt: str) -> dict:
-    """Call Gemma 3 270M model on Azure ML Managed Endpoint - NO FALLBACKS"""
+    """Call AI Foundry Agent Service - Multi-Agent Intelligence"""
     
-    # Connect to Azure ML Managed Endpoint - explicit error if not available
+    # Connect to AI Foundry Agent Orchestrator for intelligent multi-agent processing
     import requests
     import os
     
-    # Get Azure ML model endpoint and key from environment
-    azure_ml_endpoint = os.environ.get('AZURE_ML_GEMMA_ENDPOINT')
-    azure_ml_key = os.environ.get('AZURE_ML_GEMMA_KEY')
-    
-    if not azure_ml_endpoint:
-        return {
-            "success": False, 
-            "error": "AZURE_ML_GEMMA_ENDPOINT environment variable not set",
-            "error_type": "configuration_error",
-            "required_action": "Set AZURE_ML_GEMMA_ENDPOINT to point to Azure ML managed endpoint"
-        }
-    
-    if not azure_ml_key:
-        return {
-            "success": False, 
-            "error": "AZURE_ML_GEMMA_KEY environment variable not set",
-            "error_type": "configuration_error",
-            "required_action": "Set AZURE_ML_GEMMA_KEY to Azure ML endpoint authentication key"
-        }
+    # Use the new AgentOrchestrator for superior multi-agent grant writing
+    # This provides General Manager + Specialist agents instead of single GPT
     
     payload = {
         "prompt": prompt,
         "max_new_tokens": 300,
-        "temperature": 0.7,
-        "do_sample": True
-    }
-    
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {azure_ml_key}"
+        "temperature": 0.7
     }
     
     try:
-        logging.info(f"Calling Azure ML Managed Endpoint: {azure_ml_endpoint}")
-        response = requests.post(azure_ml_endpoint, json=payload, headers=headers, timeout=120)
+        import time
+        import random
         
-        if response.status_code == 200:
-            result = response.json()
-            return {"success": True, "text": result.get("generated_text", "")}
-        else:
-            return {
-                "success": False, 
-                "error": f"Azure ML Managed Endpoint Error {response.status_code}: {response.text}",
-                "error_type": "api_error",
-                "endpoint": azure_ml_endpoint,
-                "status_code": response.status_code
-            }
+        # Connect to AI Foundry Agent Orchestrator (replacement for ModelProxy)
+        proxy_url = 'https://ocp10-grant-functions.azurewebsites.net/api/AgentOrchestrator'
+        
+        # Implement retry logic for rate limiting (HTTP 429)
+        max_retries = 3
+        base_delay = 2  # Start with 2 seconds
+        
+        for attempt in range(max_retries):
+            try:
+                logging.info(f"Calling AgentOrchestrator for AI Foundry multi-agent system (attempt {attempt + 1}/{max_retries}): {proxy_url}")
+                response = requests.post(proxy_url, json=payload, headers={"Content-Type": "application/json"}, timeout=120)
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    return {"success": True, "text": result.get("generated_text", "")}
+                elif response.status_code == 429:
+                    # Rate limited - wait and retry
+                    if attempt < max_retries - 1:  # Don't sleep on last attempt
+                        delay = base_delay * (2 ** attempt) + random.uniform(0, 1)  # Exponential backoff with jitter
+                        logging.warning(f"Rate limited (429), waiting {delay:.2f}s before retry...")
+                        time.sleep(delay)
+                        continue
+                    else:
+                        # Last attempt failed with 429
+                        return {
+                            "success": False, 
+                            "error": f"AI Foundry Agent Service rate limit exceeded after {max_retries} attempts. Please try again in a few minutes.",
+                            "error_type": "rate_limit_error",
+                            "endpoint": proxy_url,
+                            "status_code": response.status_code,
+                            "retry_after": "60 seconds"
+                        }
+                else:
+                    # Other error - don't retry
+                    return {
+                        "success": False, 
+                        "error": f"AI Foundry Agent Service Error {response.status_code}: {response.text}",
+                        "error_type": "api_error",
+                        "endpoint": proxy_url,
+                        "status_code": response.status_code
+                    }
+            except requests.exceptions.RequestException as req_error:
+                if attempt < max_retries - 1:
+                    delay = base_delay * (2 ** attempt)
+                    logging.warning(f"Request error on attempt {attempt + 1}, retrying in {delay}s: {str(req_error)}")
+                    time.sleep(delay)
+                    continue
+                else:
+                    raise req_error
             
     except Exception as e:
         return {
             "success": False, 
-            "error": f"Azure ML Managed Endpoint connection failed: {str(e)}",
+            "error": f"AI Foundry Agent Service connection failed: {str(e)}",
             "error_type": "connection_error",
-            "endpoint": azure_ml_endpoint
+            "endpoint": proxy_url
         }
 
 # PDF utilities
@@ -564,6 +579,11 @@ def infer_fields_from_text(pdf_reader) -> List[Dict]:
         except Exception as e:
             raise Exception(f"Failed to extract text from PDF pages: {str(e)}")
         
+        # 🐛 DEBUG: Log extracted PDF text for debugging
+        logging.info(f"🐛 DEBUG - EXTRACTED PDF TEXT (first 1000 chars):")
+        logging.info(f"🐛 {full_text[:1000]}")
+        logging.info(f"🐛 DEBUG - FULL PDF TEXT LENGTH: {len(full_text)} characters")
+        
         # Common grant form field patterns - expanded for better matching
         field_patterns = [
             {"pattern": r"organization|applicant|entity|agency|nonprofit|ngo|name", "name": "organization_name", "type": "text"},
@@ -643,24 +663,32 @@ def classify_form_fields(form_fields: List[Dict]) -> Dict[str, List[Dict]]:
 
 def generate_field_responses(classified_fields: Dict, enhanced_ngo_profile: Dict, grant_context: Dict) -> Dict[str, str]:
     """
-    Generate appropriate responses for each field using LLM
+    Generate appropriate responses for each field using LLM with sequential processing to avoid rate limits
     """
+    import time
     responses = {}
     
     try:
-        # Use free Gemma API instead of OpenAI
-        logging.info("Using free Gemma API for grant form filling")
+        # Use GPT-OSS-120B API with sequential processing to respect rate limits
+        logging.info("Using GPT-OSS-120B API for grant form filling with sequential processing")
         
-        # Process each category
+        # Count total fields for progress tracking
+        total_fields = sum(len(fields) for fields in classified_fields.values())
+        current_field = 0
+        
+        # Process each category sequentially
         for category, fields in classified_fields.items():
             for field in fields:
+                current_field += 1
                 field_name = field["name"]
                 field_type = field["type"]
+                
+                logging.info(f"Processing field {current_field}/{total_fields}: {field_name} (category: {category})")
                 
                 # Generate contextual prompt
                 prompt = create_field_prompt(field_name, field_type, category, enhanced_ngo_profile, grant_context)
                 
-                # Get Gemma API response
+                # Get GPT-OSS-120B API response
                 try:
                     # Create more directive prompt that forces specific content generation
                     full_prompt = f"""You are an expert grant writer. Generate ONLY the specific content requested, not instructions or placeholders.
@@ -668,18 +696,42 @@ def generate_field_responses(classified_fields: Dict, enhanced_ngo_profile: Dict
 {prompt}
 
 IMPORTANT: Provide only the actual content for this field. Do not include the field name, do not say "Please provide...", do not give instructions. Just write the specific content that would go in this field."""
+                    
+                    # 🐛 DEBUG: Log the full prompt being sent to the model
+                    logging.info(f"🐛 DEBUG - PROMPT FOR FIELD '{field_name}' (first 500 chars):")
+                    logging.info(f"🐛 {full_prompt[:500]}...")
+                    
                     result = call_local_gemma_model(full_prompt)
                     
                     if not result["success"]:
                         raise Exception(f"Local Gemma model failed for field {field_name}: {result.get('error')} (Type: {result.get('error_type')})")
                     
-                    responses[field_name] = result["text"].strip()
+                    # 🐛 DEBUG: Log the raw model response
+                    raw_response = result["text"].strip()
+                    logging.info(f"🐛 DEBUG - RAW RESPONSE FOR FIELD '{field_name}' (first 500 chars):")
+                    logging.info(f"🐛 {raw_response[:500]}...")
+                    logging.info(f"🐛 DEBUG - RAW RESPONSE LENGTH: {len(raw_response)} characters")
+                    
+                    responses[field_name] = raw_response
+                    logging.info(f"✅ Generated response for {field_name}: {len(raw_response)} characters")
+                    
+                    # Add delay between API calls to respect rate limits (10 requests/minute for GlobalStandard capacity=10)
+                    # Wait 7 seconds between calls (10 req/min = 6s per request + 1s buffer)
+                    if current_field < total_fields:  # Don't wait after the last field
+                        logging.info(f"⏰ Waiting 7 seconds before next field to respect rate limits...")
+                        time.sleep(7)
                     
                 except Exception as e:
                     logging.error(f"Field response generation failed for {field_name}: {str(e)}")
                     # NO FALLBACKS - surface all errors explicitly
                     responses[field_name] = f"FIELD_GENERATION_ERROR: {str(e)}"
+                    
+                    # Still wait before next field even on error to avoid cascading rate limit issues
+                    if current_field < total_fields:
+                        logging.info(f"⏰ Waiting 7 seconds before next field (even after error) to respect rate limits...")
+                        time.sleep(7)
         
+        logging.info(f"✅ Completed processing all {total_fields} fields sequentially")
         return responses
         
     except Exception as e:
