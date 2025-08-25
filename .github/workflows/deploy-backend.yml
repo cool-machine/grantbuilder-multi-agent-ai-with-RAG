@@ -82,11 +82,20 @@ jobs:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
     - name: ⚡ Deploy to Azure Functions
-      uses: Azure/functions-action@v1
-      with:
-        app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
-        package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-        publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
+      run: |
+        echo "📦 Deploying Azure Functions using Azure CLI..."
+        cd ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+        echo "Current directory contents:"
+        ls -la
+        echo "Creating deployment package..."
+        zip -r ../function-app.zip . -x "*.git*" "*.DS_Store*" "*__pycache__*"
+        cd ..
+        echo "Deploying to Azure Functions..."
+        az functionapp deployment source config-zip \
+          --resource-group ocp10 \
+          --name ${{ env.AZURE_FUNCTIONAPP_NAME }} \
+          --src function-app.zip
+        echo "✅ Deployment completed"
 
     - name: 🔧 Configure App Settings
       run: |
@@ -95,8 +104,9 @@ jobs:
           --name ${{ env.AZURE_FUNCTIONAPP_NAME }} \
           --resource-group ocp10 \
           --settings \
-            "AZURE_ML_GEMMA_ENDPOINT=${{ secrets.GEMMA_API_ENDPOINT }}" \
-            "AZURE_ML_GEMMA_KEY=${{ secrets.GEMMA_API_KEY }}" \
+            "AZURE_ML_GPT_OSS_ENDPOINT=${{ secrets.AZURE_ML_GPT_OSS_ENDPOINT }}" \
+            "AZURE_ML_GPT_OSS_KEY=${{ secrets.AZURE_ML_GPT_OSS_KEY }}" \
+            "AZURE_OPENAI_ENDPOINT=${{ secrets.AZURE_OPENAI_ENDPOINT }}" \
             "PYTHONPATH=/home/site/wwwroot" \
             "FUNCTIONS_WORKER_RUNTIME=python" \
             "FUNCTIONS_EXTENSION_VERSION=~4"
@@ -116,7 +126,8 @@ jobs:
         fi
         
         # Test health endpoints
-        curl -f "https://${{ env.AZURE_FUNCTIONAPP_NAME }}.azurewebsites.net/api/GemmaProxy" || echo "⚠️ GemmaProxy health check failed"
+        curl -f "https://${{ env.AZURE_FUNCTIONAPP_NAME }}.azurewebsites.net/api/ModelProxy" || echo "⚠️ ModelProxy health check failed"
+        curl -f "https://${{ env.AZURE_FUNCTIONAPP_NAME }}.azurewebsites.net/api/AgentOrchestrator" || echo "⚠️ AgentOrchestrator health check failed"
 
     - name: 📊 Deployment summary
       run: |
@@ -125,8 +136,9 @@ jobs:
         echo "📅 Deployed at: $(date)"
         echo ""
         echo "Available endpoints:"
+        echo "  • AgentOrchestrator: https://${{ env.AZURE_FUNCTIONAPP_NAME }}.azurewebsites.net/api/AgentOrchestrator"
         echo "  • TokenizerFunction: https://${{ env.AZURE_FUNCTIONAPP_NAME }}.azurewebsites.net/api/TokenizerFunction"
         echo "  • AnalyzeGrant: https://${{ env.AZURE_FUNCTIONAPP_NAME }}.azurewebsites.net/api/AnalyzeGrant"
         echo "  • ProcessDocument: https://${{ env.AZURE_FUNCTIONAPP_NAME }}.azurewebsites.net/api/ProcessDocument"
         echo "  • FillGrantForm: https://${{ env.AZURE_FUNCTIONAPP_NAME }}.azurewebsites.net/api/FillGrantForm"
-        echo "  • GemmaProxy: https://${{ env.AZURE_FUNCTIONAPP_NAME }}.azurewebsites.net/api/GemmaProxy"
+        echo "  • ModelProxy: https://${{ env.AZURE_FUNCTIONAPP_NAME }}.azurewebsites.net/api/ModelProxy"
