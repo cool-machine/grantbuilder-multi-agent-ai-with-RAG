@@ -119,12 +119,16 @@ Please provide a professional, detailed response that aligns with the NGO's prof
       return;
     }
 
+    // Check if API base URL is configured
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://ocp10-grant-functions.azurewebsites.net/api';
+    console.log('Using API Base URL:', apiBaseUrl);
+
     setIsLoading(true);
     const formData = new FormData();
     formData.append('file', file);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/ProcessDocument`, {
+      const response = await fetch(`${apiBaseUrl}/ProcessDocument`, {
         method: 'POST',
         body: formData,
       });
@@ -186,7 +190,8 @@ Please provide a professional, detailed response that aligns with the NGO's prof
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/GemmaProxy`, {
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://ocp10-grant-functions.azurewebsites.net/api';
+      const response = await fetch(`${apiBaseUrl}/GemmaProxy`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
