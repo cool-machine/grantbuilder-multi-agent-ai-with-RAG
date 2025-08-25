@@ -153,9 +153,6 @@ const translations = {
     'Average Rating': 'Note moyenne',
     'Overview': 'Vue d\'ensemble',
     'Users': 'Utilisateurs',
-    
-    // Admin Page Content (removed duplicates)
-    'GrantSeeker Platform Management': 'Gestion de la plateforme GrantSeeker',
     'Recent Activity': 'Activité récente',
     'System Status': 'État du système',
     'New grant added': 'Nouvelle subvention ajoutée',
@@ -172,9 +169,6 @@ const translations = {
     'Add Grant': 'Ajouter une subvention',
     'Search grants...': 'Rechercher des subventions...',
     'Grant': 'Subvention',
-    'Amount': 'Montant',
-    'Deadline': 'Date limite',
-    'Actions': 'Actions',
     'User Management': 'Gestion des utilisateurs',
     'Feature coming soon...': 'Fonctionnalité à venir...',
     'Analytics': 'Analytics',
@@ -337,9 +331,6 @@ const translations = {
     'Average Rating': 'Average Rating',
     'Overview': 'Overview',
     'Users': 'Users',
-    
-    // Admin Page Content (removed duplicates)
-    'GrantSeeker Platform Management': 'GrantSeeker Platform Management',
     'Recent Activity': 'Recent Activity',
     'System Status': 'System Status',
     'New grant added': 'New grant added',
@@ -356,9 +347,6 @@ const translations = {
     'Add Grant': 'Add Grant',
     'Search grants...': 'Search grants...',
     'Grant': 'Grant',
-    'Amount': 'Amount',
-    'Deadline': 'Deadline',
-    'Actions': 'Actions',
     'User Management': 'User Management',
     'Feature coming soon...': 'Feature coming soon...',
     'Analytics': 'Analytics',
