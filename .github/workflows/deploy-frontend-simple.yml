@@ -1,0 +1,74 @@
+name: 🚀 Deploy Frontend (Simple)
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'frontend/**', '.github/workflows/deploy-frontend-simple.yml' ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+env:
+  VITE_AZURE_FUNCTIONS_URL: https://ocp10-grant-functions.azurewebsites.net/api
+  VITE_API_BASE_URL: https://ocp10-grant-functions.azurewebsites.net/api
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: './frontend/package-lock.json'
+
+    - name: 📦 Install dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: 🏗️ Build application
+      run: |
+        cd frontend
+        npm run build
+        echo "Build completed successfully"
+        ls -la dist/
+
+    - name: 📊 Build stats
+      run: |
+        cd frontend
+        echo "📊 Build Statistics:"
+        echo "Total files: $(find dist -type f | wc -l)"
+        echo "Bundle size: $(du -sh dist)"
+
+    - name: 🔧 Setup Pages
+      uses: actions/configure-pages@v5
+
+    - name: 📤 Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: ./frontend/dist
+
+    - name: 🌐 Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
+
+    - name: ✅ Deployment complete
+      run: |
+        echo "🎉 Frontend deployed successfully!"
+        echo "🔗 Live URL: ${{ steps.deployment.outputs.page_url }}"

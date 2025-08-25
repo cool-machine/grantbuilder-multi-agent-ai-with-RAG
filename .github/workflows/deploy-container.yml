@@ -236,7 +236,7 @@ jobs:
         # Test Azure Functions can reach new container
         sleep 30  # Allow settings to propagate
         
-        RESPONSE=$(curl -s -X POST "https://ocp10-grant-functions.azurewebsites.net/api/GemmaProxy" \
+        RESPONSE=$(curl -s -X POST "https://ocp10-grant-functions.azurewebsites.net/api/ModelProxy" \
           -H "Content-Type: application/json" \
           -d '{"prompt": "Test integration", "max_new_tokens": 20}' \
           --connect-timeout 30 --max-time 90)
