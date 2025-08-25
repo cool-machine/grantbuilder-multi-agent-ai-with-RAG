@@ -392,7 +392,7 @@ Please provide a professional, detailed response that aligns with the NGO's prof
                     className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Upload className="h-4 w-4" />
-                    {isLoading ? 'Processing...' : 'Upload Grant PDF'}
+                    {isLoading ? 'Extracting PDF...' : 'Step 1: Upload PDF (Azure Function Style)'}
                   </button>
                 </div>
                 <div className="text-center text-gray-500">OR</div>
@@ -421,7 +421,7 @@ Please provide a professional, detailed response that aligns with the NGO's prof
             {/* Prompt Template */}
             <div className="bg-white rounded-lg shadow-md border border-gray-200">
               <div className="p-6 border-b border-gray-200">
-                <h3 className="text-lg font-semibold mb-2">Prompt Template</h3>
+                <h3 className="text-lg font-semibold mb-2">Step 2: Prompt Template</h3>
                 <p className="text-gray-600 text-sm">Customize the system prompt sent to the model.</p>
               </div>
               <div className="p-6">
@@ -434,6 +434,83 @@ Please provide a professional, detailed response that aligns with the NGO's prof
                 />
               </div>
             </div>
+
+            {/* Final Prompt Preview */}
+            {(extractedText || grantDocument) && (
+              <div className="bg-white rounded-lg shadow-md border border-gray-200">
+                <div className="p-6 border-b border-gray-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Eye className="h-5 w-5" />
+                    <h3 className="text-lg font-semibold">Step 3: Final Prompt Preview</h3>
+                  </div>
+                  <p className="text-gray-600 text-sm">This is exactly what will be sent to GPT-OSS-120B.</p>
+                </div>
+                <div className="p-6">
+                  <div className="bg-gray-50 p-4 rounded-md font-mono text-sm max-h-64 overflow-y-auto border">
+                    <pre className="whitespace-pre-wrap">
+                      {buildFinalPrompt('Write an executive summary for this grant application')}
+                    </pre>
+                  </div>
+                  <button
+                    onClick={() => copyToClipboard(buildFinalPrompt('Write an executive summary for this grant application'))}
+                    className="mt-3 flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <Copy className="h-3 w-3" />
+                    Copy Final Prompt
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Send to Model Button */}
+            {(extractedText || grantDocument) && (
+              <div className="bg-white rounded-lg shadow-md border border-gray-200">
+                <div className="p-6 border-b border-gray-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Play className="h-5 w-5" />
+                    <h3 className="text-lg font-semibold">Step 4: Send to Model</h3>
+                  </div>
+                  <p className="text-gray-600 text-sm">Manually send the prompt to GPT-OSS-120B when ready.</p>
+                </div>
+                <div className="p-6">
+                  <div className="grid grid-cols-1 gap-3">
+                    <button
+                      onClick={() => {
+                        setCurrentMessage('Write an executive summary for this grant application');
+                        sendMessage();
+                      }}
+                      disabled={isLoading}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Send className="h-4 w-4" />
+                      Send "Executive Summary" to Model
+                    </button>
+                    <button
+                      onClick={() => {
+                        setCurrentMessage('What are our key strengths for this funding opportunity?');
+                        sendMessage();
+                      }}
+                      disabled={isLoading}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Send className="h-4 w-4" />
+                      Send "Key Strengths" to Model
+                    </button>
+                    <button
+                      onClick={() => {
+                        setCurrentMessage('Draft a project description highlighting our impact in rural education');
+                        sendMessage();
+                      }}
+                      disabled={isLoading}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Send className="h-4 w-4" />
+                      Send "Project Description" to Model
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right Column - Chat Interface */}
