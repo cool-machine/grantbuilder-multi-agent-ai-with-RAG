@@ -15,6 +15,7 @@ import RegisterPage from './pages/RegisterPage';
 import GrantAnalysisPage from './pages/GrantAnalysisPage';
 import DocumentAnalysisPage from './pages/DocumentAnalysisPage';
 import FillApplicationPage from './pages/FillApplicationPage';
+import ModelTestingPage from './pages/ModelTestingPage';
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
                   <Route path="/document-analysis" element={<DocumentAnalysisPage />} />
                   <Route path="/fill-application" element={<FillApplicationPage />} />
                   <Route path="/fill-application/:grantId" element={<FillApplicationPage />} />
+                  <Route path="/model-testing" element={<ModelTestingPage />} />
                 </Routes>
               </main>
               <Footer />

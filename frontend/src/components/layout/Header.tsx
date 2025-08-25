@@ -62,6 +62,13 @@ const Header: React.FC = () => {
                     <FileText className="w-4 h-4 mr-2" />
                     Document Processor
                   </Link>
+                  <Link
+                    to="/model-testing"
+                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    Model Testing Lab
+                  </Link>
                 </div>
               </div>
             </div>
@@ -192,6 +199,13 @@ const Header: React.FC = () => {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Document Processor
+                  </Link>
+                  <Link
+                    to="/model-testing"
+                    className="block px-3 py-2 text-sm text-gray-700 hover:text-custom-red hover:bg-gray-50 rounded-md"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Model Testing Lab
                   </Link>
                 </div>
               </div>
