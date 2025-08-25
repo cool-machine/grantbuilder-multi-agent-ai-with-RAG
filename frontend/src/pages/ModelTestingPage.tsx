@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { Upload, Send, Copy, Trash2, Settings, MessageSquare } from 'lucide-react';
 
+// Model Testing Playground - Interactive chat interface for prompt engineering
+
 interface ChatMessage {
   id: string;
   type: 'user' | 'assistant' | 'system';
