@@ -134,6 +134,9 @@ Please provide a professional, detailed response that aligns with the NGO's prof
       });
 
       if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('PDF processing service is currently unavailable. Please use manual text input instead.');
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
@@ -146,9 +149,10 @@ Please provide a professional, detailed response that aligns with the NGO's prof
       });
     } catch (error) {
       console.error('Error processing document:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to process PDF document';
       showToast({
         title: "Upload failed",
-        description: "Failed to process PDF document. Please try again.",
+        description: errorMessage + " You can paste grant text manually instead.",
         variant: "destructive"
       });
     } finally {
@@ -209,6 +213,9 @@ Please provide a professional, detailed response that aligns with the NGO's prof
       });
 
       if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('AI model service is currently unavailable. Please try again later or contact support.');
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
@@ -226,14 +233,15 @@ Please provide a professional, detailed response that aligns with the NGO's prof
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         type: 'system',
-        content: `Error: ${error instanceof Error ? error.message : 'Failed to get response from model'}`,
+        content: `Error: ${error instanceof Error ? error.message : 'Failed to get response from model'}\n\nNote: This is a demo environment. The AI model service may be temporarily unavailable.`,
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
       
+      const errorMsg = error instanceof Error ? error.message : 'Failed to get response from model';
       showToast({
         title: "Request failed",
-        description: "Failed to get response from the model. Please try again.",
+        description: errorMsg.includes('404') ? 'AI service temporarily unavailable' : 'Network error - please try again',
         variant: "destructive"
       });
     } finally {
