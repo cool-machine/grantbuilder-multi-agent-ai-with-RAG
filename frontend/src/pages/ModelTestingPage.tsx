@@ -25,20 +25,59 @@ interface NGOProfile {
 }
 
 export default function ModelTestingPage() {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [currentMessage, setCurrentMessage] = useState('');
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: 'welcome',
+      type: 'system',
+      content: '🎉 Welcome to the Model Testing Playground!\n\nThis demo is pre-populated with Teach for America information and a sample Appalachian Regional Commission grant. You can:\n\n✅ Test different prompts in the chat below\n✅ Modify the NGO profile or grant context as needed\n✅ Customize the prompt template on the left\n✅ View the exact prompts sent to GPT-OSS-120B\n\nTry asking: "Write an executive summary for this grant application" or "What are our key strengths for this funding opportunity?"',
+      timestamp: new Date()
+    }
+  ]);
+  const [currentMessage, setCurrentMessage] = useState('Write an executive summary for this grant application');
   const [isLoading, setIsLoading] = useState(false);
   const [ngoProfile, setNGOProfile] = useState<NGOProfile>({
-    name: '',
-    mission: '',
-    focusAreas: '',
-    targetPopulation: '',
-    geographicScope: '',
-    established: '',
-    staff: '',
-    budget: ''
+    name: 'Teach for America Appalachia',
+    mission: 'Find, develop, and support equity-oriented leaders to transform education and expand opportunity for all children',
+    focusAreas: 'education, teacher training, rural education, equity',
+    targetPopulation: 'Students in high-need schools, particularly in rural Appalachian communities',
+    geographicScope: 'Rural Appalachian communities across multiple states',
+    established: '1989',
+    staff: '3,500+ corps members and alumni',
+    budget: '$245,000,000'
   });
-  const [grantDocument, setGrantDocument] = useState('');
+  const [grantDocument, setGrantDocument] = useState(`APPALACHIAN REGIONAL COMMISSION
+EDUCATION EXCELLENCE INITIATIVE
+
+Grant Application Guidelines:
+
+PROGRAM OVERVIEW:
+The Appalachian Regional Commission (ARC) seeks proposals for innovative education programs that address teacher shortages and improve educational outcomes in rural Appalachian communities.
+
+FUNDING DETAILS:
+- Maximum award: $500,000
+- Project period: 2 years
+- Match required: 25% (can be in-kind)
+
+ELIGIBILITY REQUIREMENTS:
+- Must serve rural Appalachian communities
+- Demonstrated experience in education and teacher development
+- Evidence of community partnerships
+- Measurable teacher placement outcomes required
+
+KEY EVALUATION CRITERIA:
+1. Project Impact (30%) - How will this improve education outcomes?
+2. Sustainability (25%) - Long-term plan for program continuation
+3. Community Engagement (20%) - Local partnerships and support
+4. Budget and Timeline (15%) - Realistic and cost-effective approach
+5. Organizational Capacity (10%) - Team qualifications and experience
+
+REQUIRED SECTIONS:
+- Executive Summary (1 page)
+- Project Description and Goals (3 pages)
+- Implementation Plan and Timeline (2 pages)
+- Evaluation and Measurement Plan (2 pages)
+- Budget and Budget Narrative (2 pages)
+- Organizational Capacity and Team (1 page)`);
   const [extractedText, setExtractedText] = useState('');
   const [promptTemplate, setPromptTemplate] = useState(`You are a professional grant writer helping an NGO fill out grant applications. 
 
