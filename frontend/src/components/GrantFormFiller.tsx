@@ -246,13 +246,29 @@ export const GrantFormFiller: React.FC<GrantFormFillerProps> = ({ grantId }) => 
         requestBody.ngo_profile_pdf = profilePdfData;
       }
 
-      // Call Azure Functions backend - NO FALLBACKS
-      const response = await fetch('https://ocp10-grant-functions.azurewebsites.net/api/FillGrantForm', {
+      // Call appropriate backend endpoint based on processing mode
+      let apiUrl = 'https://ocp10-grant-functions.azurewebsites.net/api/FillGrantForm';
+      let requestPayload = requestBody;
+      
+      // For multi-agent framework, call directly to bypass routing issues
+      if (processingMode === 'multi-agent-framework') {
+        apiUrl = 'https://ocp10-grant-functions.azurewebsites.net/api/MultiAgentFramework';
+        requestPayload = {
+          prompt: `Generate comprehensive grant application for ${ngoProfileData.organization_name}`,
+          context: {
+            ngo_profile: ngoProfileData,
+            grant_context: grantContext,
+            processing_mode: processingMode
+          }
+        };
+      }
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestPayload)
       });
 
       if (!response.ok) {
