@@ -28,15 +28,20 @@ def call_local_gemma_model(prompt: str) -> dict:
     payload = {
         "prompt": prompt,
         "max_new_tokens": 300,
-        "temperature": 0.7
+        "temperature": 0.7,
+        "debug": True,  # Enable agent dialogue visualization for debugging
+        "context": {
+            "field_name": prompt.split("for the field")[1].split("'")[1] if "for the field" in prompt else "unknown",
+            "processing_mode": "enhanced_multiagent"
+        }
     }
     
     try:
         import time
         import random
         
-        # Connect to AI Foundry Agent Orchestrator (replacement for ModelProxy)
-        proxy_url = 'https://ocp10-grant-functions.azurewebsites.net/api/AgentOrchestrator'
+        # Connect to Enhanced Multi-Agent Orchestrator with DeepSeek R1 + Web Crawling
+        proxy_url = 'https://ocp10-grant-functions.azurewebsites.net/api/EnhancedAgentOrchestrator'
         
         # Implement retry logic for rate limiting (HTTP 429)
         max_retries = 3
@@ -49,7 +54,21 @@ def call_local_gemma_model(prompt: str) -> dict:
                 
                 if response.status_code == 200:
                     result = response.json()
-                    return {"success": True, "text": result.get("generated_text", "")}
+                    
+                    # 🐛 DEBUG: Log enhanced system response
+                    logging.info(f"🤖 ENHANCED AGENT RESPONSE: {json.dumps(result, indent=2)}")
+                    
+                    # Extract and log agent dialogue if available
+                    if result.get("debug_info", {}).get("agent_dialogue"):
+                        logging.info(f"🗨️ AGENT DIALOGUE:")
+                        for dialogue in result["debug_info"]["agent_dialogue"]:
+                            logging.info(f"   {dialogue.get('agent', 'Unknown')}: {dialogue.get('message', 'No message')[:200]}...")
+                    
+                    # Extract and log decision tree if available
+                    if result.get("debug_info", {}).get("decision_tree"):
+                        logging.info(f"🌳 DECISION TREE: {json.dumps(result['debug_info']['decision_tree'], indent=2)}")
+                    
+                    return {"success": True, "text": result.get("generated_text", ""), "debug_info": result.get("debug_info")}
                 elif response.status_code == 429:
                     # Rate limited - wait and retry
                     if attempt < max_retries - 1:  # Don't sleep on last attempt
@@ -711,6 +730,16 @@ IMPORTANT: Provide only the actual content for this field. Do not include the fi
                     logging.info(f"🐛 DEBUG - RAW RESPONSE FOR FIELD '{field_name}' (first 500 chars):")
                     logging.info(f"🐛 {raw_response[:500]}...")
                     logging.info(f"🐛 DEBUG - RAW RESPONSE LENGTH: {len(raw_response)} characters")
+                    
+                    # Log enhanced system debug info if available
+                    if result.get("debug_info"):
+                        logging.info(f"🔍 ENHANCED DEBUG INFO FOR FIELD '{field_name}':")
+                        if result["debug_info"].get("agent_dialogue"):
+                            logging.info(f"   🗨️ Agent dialogue captured: {len(result['debug_info']['agent_dialogue'])} messages")
+                        if result["debug_info"].get("web_crawling_results"):
+                            logging.info(f"   🕷️ Web crawling results: {len(result['debug_info']['web_crawling_results'])} results")
+                        if result["debug_info"].get("research_intelligence"):
+                            logging.info(f"   🧠 Research intelligence: {result['debug_info']['research_intelligence'].get('analysis_summary', 'No summary')[:100]}...")
                     
                     responses[field_name] = raw_response
                     logging.info(f"✅ Generated response for {field_name}: {len(raw_response)} characters")
