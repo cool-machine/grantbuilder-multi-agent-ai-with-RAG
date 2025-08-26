@@ -1,9 +1,14 @@
-name: 🚀 Deploy Frontend (Simple)
+name: 🚀 Deploy Enhanced Multi-Agent Grant Writing System
 
 on:
   push:
     branches: [ main ]
-    paths: [ 'frontend/**', '.github/workflows/deploy-frontend-simple.yml' ]
+    paths: [ 
+      'frontend/**', 
+      'deepseek-multi-agent-system/**',
+      'backend/**', 
+      '.github/workflows/deploy-frontend-simple.yml' 
+    ]
   workflow_dispatch:
 
 permissions:
@@ -68,7 +73,13 @@ jobs:
       id: deployment
       uses: actions/deploy-pages@v4
 
-    - name: ✅ Deployment complete
+    - name: ✅ Enhanced System Deployed
       run: |
-        echo "🎉 Frontend deployed successfully!"
+        echo "🎉 Enhanced Multi-Agent Grant Writing System deployed successfully!"
         echo "🔗 Live URL: ${{ steps.deployment.outputs.page_url }}"
+        echo "✨ Features deployed:"
+        echo "  🤖 DeepSeek R1 Multi-Agent Architecture"
+        echo "  🕷️ Enhanced Web Crawling Research Tools"
+        echo "  📄 Three-Way Document Processing"
+        echo "  🔍 Dual Intelligence: Applicant & Grant Provider Research"
+        echo "🚀 Ready for production with advanced AI capabilities!"
