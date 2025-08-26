@@ -100,3 +100,11 @@ ENV/
 *.tmp
 *.temp
 .cache/
+
+# DeepSeek Multi-Agent System
+azure_services_config.env
+**/azure_services_config.env
+*.pem
+deepseek-multi-agent-system/artifacts/
+deepseek-multi-agent-system/outputs/
+deepseek-multi-agent-system/checkpoints/

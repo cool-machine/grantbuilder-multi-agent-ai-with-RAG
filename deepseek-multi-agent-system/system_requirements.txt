@@ -1,0 +1,64 @@
+# DeepSeek R1 Multi-Agent Grant Writing System Dependencies
+# Comprehensive requirements for production deployment
+
+# Core LangGraph and AI frameworks
+langgraph>=0.2.0
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-community>=0.3.0
+
+# Azure SDK components (using your credits)
+azure-storage-blob>=12.19.0
+azure-cosmos>=4.5.1
+azure-servicebus>=7.11.0
+azure-search-documents>=11.4.0
+azure-ai-textanalytics>=5.3.0
+azure-ai-language-questionanswering>=1.1.0
+azure-cognitiveservices-search-websearch>=2.0.0
+azure-identity>=1.15.0
+azure-core>=1.29.0
+
+# HTTP and API clients
+requests>=2.31.0
+httpx>=0.25.0
+aiohttp>=3.9.0
+
+# Data processing and validation
+pydantic>=2.5.0
+dataclasses-json>=0.6.0
+marshmallow>=3.20.0
+
+# Mathematical and financial calculations
+numpy>=1.24.0
+pandas>=2.1.0
+
+# Database and persistence
+sqlalchemy>=2.0.0
+
+# Configuration and environment
+python-dotenv>=1.0.0
+pyyaml>=6.0.1
+
+# Logging and monitoring
+structlog>=23.2.0
+
+# Text processing and NLP utilities
+regex>=2023.10.0
+
+# Date and time handling
+python-dateutil>=2.8.2
+pytz>=2023.3
+
+# JSON and serialization
+orjson>=3.9.0
+
+# Validation and schema
+jsonschema>=4.20.0
+
+# Development and testing dependencies
+pytest>=7.4.0
+pytest-asyncio>=0.23.0
+black>=23.10.0
+
+# Production deployment
+gunicorn>=21.2.0

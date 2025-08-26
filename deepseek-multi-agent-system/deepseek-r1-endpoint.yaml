@@ -1,0 +1,4 @@
+$schema: https://azuremlschemas.azureedge.net/latest/serverlessEndpoint.schema.json
+name: deepseek-r1-reasoning
+model_id: azureml://registries/azureml-deepseek/models/DeepSeek-R1
+auth_mode: key
