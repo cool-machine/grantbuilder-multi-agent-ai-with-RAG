@@ -2,19 +2,19 @@
   "name": "GrantSeeker AI Platform",
   "short_name": "GrantSeeker AI",
   "description": "Complete AI-powered grant discovery, analysis, and application system",
-  "start_url": "/grantseeker-ai-platform/",
+  "start_url": "/grantbuilder-multi-agent-ai-with-RAG/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#011F5B",
   "icons": [
     {
-      "src": "/grantseeker-ai-platform/favicon.svg",
+      "src": "/grantbuilder-multi-agent-ai-with-RAG/favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
     },
     {
-      "src": "/grantseeker-ai-platform/favicon.ico",
+      "src": "/grantbuilder-multi-agent-ai-with-RAG/favicon.ico",
       "sizes": "16x16",
       "type": "image/x-icon"
     }
