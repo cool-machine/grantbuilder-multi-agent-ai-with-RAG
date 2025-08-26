@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FileText, Upload, Wand2, Download, AlertCircle, CheckCircle, Globe, FileUp, Eye } from 'lucide-react';
 import { useGrants } from '../contexts/GrantContext';
 import DocumentProcessorSelector from './DocumentProcessorSelector';
+import MultiAgentChatWindow from './MultiAgentChatWindow';
 
 interface NGOProfile {
   organization_name: string;
@@ -51,7 +52,7 @@ interface FilledFormResponse {
     has_form_fields: boolean;
     form_fields: string[];
   };
-  processing_summary: {
+  processing_summary?: {
     total_fields: number;
     filled_fields: number;
     fill_rate: number;
@@ -60,6 +61,11 @@ interface FilledFormResponse {
       method: string;
     };
   };
+  // Multi-Agent Framework Response
+  result?: string;
+  chat_history?: any[];
+  tasks?: any[];
+  deliverables?: any[];
 }
 
 interface GrantFormFillerProps {
@@ -74,7 +80,11 @@ export const GrantFormFiller: React.FC<GrantFormFillerProps> = ({ grantId }) => 
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState<FilledFormResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [processingMode, setProcessingMode] = useState<string>('azure-deepseek'); // Default to enhanced system
+  const [processingMode, setProcessingMode] = useState<string>('multi-agent-framework'); // Default to new system
+  
+  // Multi-Agent Chat State
+  const [showChatWindow, setShowChatWindow] = useState(false);
+  const [chatHistory, setChatHistory] = useState<any[]>([]);
   
   // New multi-source NGO data - Demo-ready defaults (Teach for America)
   const [ngoDataSources, setNgoDataSources] = useState<NGODataSources>({
@@ -253,6 +263,12 @@ export const GrantFormFiller: React.FC<GrantFormFillerProps> = ({ grantId }) => 
 
       const data: FilledFormResponse = await response.json();
       setResult(data);
+      
+      // Extract chat history for multi-agent framework
+      if (processingMode === 'multi-agent-framework' && data.chat_history) {
+        setChatHistory(data.chat_history);
+        setShowChatWindow(true);
+      }
 
     } catch (err) {
       console.error('Grant form filling error:', err);
@@ -796,6 +812,15 @@ export const GrantFormFiller: React.FC<GrantFormFillerProps> = ({ grantId }) => 
           </div>
         )}
       </div>
+
+      {/* Multi-Agent Chat Window */}
+      {(processingMode === 'multi-agent-framework' && (isProcessing || chatHistory.length > 0)) && (
+        <MultiAgentChatWindow
+          isProcessing={isProcessing}
+          chatHistory={chatHistory}
+          onClose={() => setChatHistory([])}
+        />
+      )}
     </div>
   );
 };

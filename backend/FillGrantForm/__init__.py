@@ -41,7 +41,9 @@ def call_local_gemma_model(prompt: str, processing_mode: str = 'azure-deepseek')
         import random
         
         # Connect to appropriate orchestrator based on processing mode
-        if processing_mode == 'azure-deepseek':
+        if processing_mode == 'multi-agent-framework':
+            proxy_url = 'https://ocp10-grant-functions.azurewebsites.net/api/MultiAgentFramework'
+        elif processing_mode == 'azure-deepseek':
             proxy_url = 'https://ocp10-grant-functions.azurewebsites.net/api/EnhancedAgentOrchestrator'
         elif processing_mode == 'o3-multimodal':
             proxy_url = 'https://ocp10-grant-functions.azurewebsites.net/api/O3MultimodalProcessor'  # Future implementation
@@ -73,7 +75,17 @@ def call_local_gemma_model(prompt: str, processing_mode: str = 'azure-deepseek')
                     if result.get("debug_info", {}).get("decision_tree"):
                         logging.info(f"🌳 DECISION TREE: {json.dumps(result['debug_info']['decision_tree'], indent=2)}")
                     
-                    return {"success": True, "text": result.get("generated_text", ""), "debug_info": result.get("debug_info")}
+                    # Extract chat history for multi-agent framework
+                    if result.get("chat_history"):
+                        logging.info(f"💬 CHAT HISTORY: {len(result['chat_history'])} messages from multi-agent framework")
+                    
+                    return {
+                        "success": True, 
+                        "text": result.get("generated_text", result.get("result", "")), 
+                        "debug_info": result.get("debug_info"),
+                        "chat_history": result.get("chat_history", []),
+                        "framework_response": result
+                    }
                 elif response.status_code == 429:
                     # Rate limited - wait and retry
                     if attempt < max_retries - 1:  # Don't sleep on last attempt

@@ -39,6 +39,15 @@ const DocumentProcessorSelector: React.FC<DocumentProcessorSelectorProps> = ({
       available: true
     },
     {
+      id: 'multi-agent-framework',
+      name: '👥 Multi-Agent Framework (NEW)',
+      description: 'Complete collaborative system with chat interface and voting',
+      estimatedTime: '~2-3 minutes',
+      estimatedCost: '$1.00-2.00',
+      confidence: '98%',
+      available: true
+    },
+    {
       id: 'o3-multimodal',
       name: '🧠 o3 Multimodal (Future)',
       description: 'Direct PDF processing with multimodal reasoning',
@@ -129,6 +138,22 @@ const DocumentProcessorSelector: React.FC<DocumentProcessorSelectorProps> = ({
                   <div>✅ 671B parameter reasoning</div>
                   <div>✅ Comprehensive strategy</div>
                   <div>✅ Inter-agent collaboration</div>
+                </div>
+              </div>
+            )}
+
+            {showDetails && option.id === 'multi-agent-framework' && (
+              <div className="mt-4 pt-3 border-t border-gray-200">
+                <h5 className="font-medium text-gray-700 mb-2">Multi-Agent Features:</h5>
+                <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
+                  <div>🎯 General Manager orchestration</div>
+                  <div>💬 Real-time chat interface</div>
+                  <div>🗳️ Democratic voting system</div>
+                  <div>🔄 Iterative improvement loops</div>
+                  <div>👥 6 specialized agents</div>
+                  <div>📋 Task allocation & tracking</div>
+                  <div>✅ Group validation process</div>
+                  <div>🎪 Complete transparency</div>
                 </div>
               </div>
             )}
