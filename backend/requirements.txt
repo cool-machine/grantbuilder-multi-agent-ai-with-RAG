@@ -14,6 +14,16 @@ azure-storage-blob>=12.14.0
 azure-identity>=1.13.0
 azure-cosmos>=4.5.0
 
+# Azure Document Intelligence & Computer Vision (New)
+azure-ai-formrecognizer>=3.3.0
+azure-cognitiveservices-vision-computervision>=0.9.0
+
+# DeepSeek R1 Multi-Agent System Dependencies
+langgraph>=0.2.0
+langchain>=0.3.0
+langchain-core>=0.3.0
+dataclasses-json>=0.6.0
+
 # Core Python Dependencies
 python-dotenv==1.0.0
 

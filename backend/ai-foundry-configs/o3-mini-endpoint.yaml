@@ -1,0 +1,4 @@
+$schema: https://azuremlschemas.azureedge.net/latest/serverlessEndpoint.schema.json
+name: o3-mini-specialists
+model_id: azureml://registries/azureml/models/o3-mini/versions/latest
+auth_mode: key

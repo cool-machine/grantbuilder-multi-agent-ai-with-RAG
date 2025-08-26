@@ -1,0 +1,4 @@
+$schema: https://azuremlschemas.azureedge.net/latest/serverlessEndpoint.schema.json
+name: o3-general-manager
+model_id: azureml://registries/azureml/models/o3
+auth_mode: key

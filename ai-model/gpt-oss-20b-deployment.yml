@@ -1,0 +1,24 @@
+$schema: https://azuremlschemas.azureedge.net/latest/managedOnlineDeployment.schema.json
+name: gpt-oss-20b-deploy
+endpoint_name: gpt-oss-20b-endpoint
+model: azureml://registries/azureml/models/gpt-oss-20b-cuda-gpu/versions/1
+instance_type: Standard_DS3_v2
+instance_count: 1
+environment_variables:
+  CUDA_VISIBLE_DEVICES: "0"
+  HF_HOME: /tmp/cache
+  TRANSFORMERS_CACHE: /tmp/cache
+request_settings:
+  request_timeout_ms: 180000
+  max_concurrent_requests_per_instance: 1
+  max_queue_wait_ms: 1000
+liveness_probe:
+  failure_threshold: 30
+  success_threshold: 1
+  period: 10
+  initial_delay: 900
+readiness_probe:
+  failure_threshold: 10
+  success_threshold: 1
+  period: 10
+  initial_delay: 900

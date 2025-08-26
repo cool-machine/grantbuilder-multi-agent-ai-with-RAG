@@ -1,0 +1,128 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Custom scrollbar styles */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Animation utilities */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Custom component styles */
+.model-card {
+  @apply bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer;
+}
+
+.model-card.selected {
+  @apply ring-2 ring-blue-500 border-blue-500;
+}
+
+.model-card.loading {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+.result-card {
+  @apply bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4;
+}
+
+.result-card.success {
+  @apply border-l-4 border-l-green-500;
+}
+
+.result-card.error {
+  @apply border-l-4 border-l-red-500;
+}
+
+.prompt-textarea {
+  @apply w-full p-3 border border-gray-300 rounded-md resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+  min-height: 120px;
+}
+
+.response-text {
+  @apply text-gray-800 leading-relaxed whitespace-pre-wrap break-words;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  line-height: 1.6;
+}
+
+.metrics-grid {
+  @apply grid grid-cols-2 gap-4 mt-4;
+}
+
+.metric-item {
+  @apply text-center p-3 bg-gray-50 rounded-lg;
+}
+
+.metric-value {
+  @apply text-lg font-bold text-blue-600;
+}
+
+.metric-label {
+  @apply text-xs text-gray-500 mt-1;
+}
+
+/* Loading spinner */
+.spinner {
+  @apply inline-block w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin;
+}
+
+/* Status indicators */
+.status-indicator {
+  @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium;
+}
+
+.status-indicator.success {
+  @apply bg-green-100 text-green-800;
+}
+
+.status-indicator.error {
+  @apply bg-red-100 text-red-800;
+}
+
+.status-indicator.warning {
+  @apply bg-yellow-100 text-yellow-800;
+}
+
+.status-indicator.info {
+  @apply bg-blue-100 text-blue-800;
+}

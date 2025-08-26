@@ -1,0 +1,74 @@
+# GrantSeeker AI - GPT-OSS-20B Container
+# GPU-enabled deployment for Azure Container Instances
+FROM nvidia/cuda:12.1-devel-ubuntu22.04
+
+LABEL maintainer="GrantSeeker AI Platform" \
+      description="Containerized GPT-OSS-20B for AI-powered grant writing" \
+      version="2.0.0" \
+      gpu.required="true"
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    python3.10 \
+    python3.10-dev \
+    python3-pip \
+    git \
+    curl \
+    build-essential \
+    cmake \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Create symbolic links for python
+RUN ln -sf /usr/bin/python3.10 /usr/bin/python3 && \
+    ln -sf /usr/bin/python3.10 /usr/bin/python
+
+# Upgrade pip
+RUN python3 -m pip install --no-cache-dir --upgrade pip
+
+# Copy requirements first for better Docker layer caching
+COPY requirements.txt .
+
+# Install PyTorch with CUDA support first
+RUN pip install --no-cache-dir torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 --index-url https://download.pytorch.org/whl/cu121
+
+# Install other Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy Flask API application
+COPY flask_gpt_oss_api.py .
+COPY deploy/ ./deploy/
+
+# Create necessary directories
+RUN mkdir -p /app/logs /app/cache
+
+# Set environment variables for production
+ENV PYTHONUNBUFFERED=1 \
+    FLASK_ENV=production \
+    HF_HOME=/app/cache \
+    TRANSFORMERS_CACHE=/app/cache \
+    PYTORCH_TRANSFORMERS_CACHE=/app/cache \
+    CUDA_VISIBLE_DEVICES=0
+
+# Expose port 8000
+EXPOSE 8000
+
+# Health check for container orchestration
+HEALTHCHECK --interval=60s --timeout=30s --start-period=300s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Use non-root user for security
+RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+USER appuser
+
+# Pre-download the model to reduce startup time
+RUN python3 -c "from transformers import AutoTokenizer, AutoModelForCausalLM; \
+    print('Pre-downloading GPT-OSS-20B model...'); \
+    tokenizer = AutoTokenizer.from_pretrained('openai/gpt-oss-20b', cache_dir='/app/cache'); \
+    print('Model downloaded successfully')" || echo "Model pre-download failed, will download on first run"
+
+# Run Flask application
+CMD ["python3", "flask_gpt_oss_api.py"]

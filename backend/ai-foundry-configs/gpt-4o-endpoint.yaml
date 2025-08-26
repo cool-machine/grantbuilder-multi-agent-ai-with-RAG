@@ -1,0 +1,4 @@
+$schema: https://azuremlschemas.azureedge.net/latest/serverlessEndpoint.schema.json
+name: gpt-4o-communication
+model_id: azureml://registries/azureml/models/gpt-4o/versions/latest
+auth_mode: key

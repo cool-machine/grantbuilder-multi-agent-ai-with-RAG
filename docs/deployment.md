@@ -278,7 +278,7 @@ Error: Cannot connect to AI model
 az resource list --resource-group ocp10 --query "[].{Name:name, Type:type, State:state}" --output table
 
 # Test component connectivity
-curl -f https://ocp10-grant-functions.azurewebsites.net/api/GemmaProxy || echo "Backend connectivity issue"
+curl -f https://ocp10-grant-functions.azurewebsites.net/api/ModelProxy || echo "Backend connectivity issue"
 ```
 
 ## 📊 Cost Monitoring

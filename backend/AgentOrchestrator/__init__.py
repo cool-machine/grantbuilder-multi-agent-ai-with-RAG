@@ -4,8 +4,6 @@ import json
 import logging
 import os
 import base64
-import PyPDF2
-import io
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 
@@ -35,12 +33,12 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                         "Grant writing optimization"
                     ],
                     "agents_available": {
-                        "general_manager": "gpt-4o",
-                        "research_agent": "o4-mini", 
-                        "budget_agent": "o4-mini",
-                        "writing_agent": "o3-mini",
-                        "impact_agent": "o4-mini",
-                        "networking_agent": "o4-mini"
+                        "general_manager": "gpt-4o",    # Strategic reasoning (o3 not available in region)
+                        "research_agent": "o3-mini",    # Light reasoning for analysis  
+                        "budget_agent": "o3-mini",      # Light reasoning for calculations
+                        "impact_agent": "o3-mini",      # Light reasoning for evaluation
+                        "writing_agent": "gpt-4o",      # Superior language + multimodal
+                        "networking_agent": "gpt-4o"   # Communication + relationship skills
                     },
                     "version": "2025.1",
                     "upgrade_from": "ModelProxy (single GPT model)"
@@ -66,32 +64,36 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 task_type = req_body.get('task_type', 'general')
                 max_tokens = req_body.get('max_tokens', req_body.get('max_new_tokens', 300))
                 
-                # Handle PDF file upload
-                pdf_content = ""
+                # Handle PDF file upload for multimodal o3 processing
+                pdf_data = None
                 if 'pdf_file' in req_body:
                     pdf_result = process_pdf_upload(req_body['pdf_file'])
                     if pdf_result['success']:
-                        pdf_content = pdf_result['content']
-                        logging.info(f'📄 PDF processed: {len(pdf_content)} characters extracted')
+                        pdf_data = {
+                            "base64": pdf_result['pdf_base64'],
+                            "type": "application/pdf",
+                            "size": pdf_result['size_bytes']
+                        }
+                        logging.info(f'📄 PDF ready for o3 multimodal analysis: {pdf_result["size_bytes"]} bytes')
                     else:
                         logging.warning(f'⚠️ PDF processing failed: {pdf_result["error"]}')
                 
                 logging.info(f'📝 Processing task type: {task_type}')
                 
-                # Route to appropriate agent workflow with PDF content
+                # Route to appropriate agent workflow with PDF data for multimodal analysis
                 if task_type in ['grant_application', 'full_grant']:
-                    result = process_full_grant_application(prompt, req_body, pdf_content)
+                    result = process_full_grant_application(prompt, req_body, pdf_data)
                 elif task_type in ['research', 'grant_search']:
-                    result = process_research_task(prompt, max_tokens, pdf_content)
+                    result = process_research_task(prompt, max_tokens, pdf_data)
                 elif task_type in ['budget', 'financial']:
-                    result = process_budget_task(prompt, max_tokens, pdf_content)
+                    result = process_budget_task(prompt, max_tokens, pdf_data)
                 elif task_type in ['writing', 'proposal']:
-                    result = process_writing_task(prompt, max_tokens, pdf_content)
+                    result = process_writing_task(prompt, max_tokens, pdf_data)
                 elif task_type in ['impact', 'evaluation']:
-                    result = process_impact_task(prompt, max_tokens, pdf_content)
+                    result = process_impact_task(prompt, max_tokens, pdf_data)
                 else:
-                    # General task - use General Manager
-                    result = process_general_task(prompt, max_tokens, pdf_content)
+                    # General task - use General Manager with o3
+                    result = process_general_task(prompt, max_tokens, pdf_data)
                 
                 return func.HttpResponse(
                     json.dumps(result),
@@ -273,7 +275,7 @@ def run_agent(agent_id: str, message: str) -> Dict:
         logging.error(f"Error running agent: {str(e)}")
         return {"success": False, "error": str(e)}
 
-def process_full_grant_application(prompt: str, request_data: Dict, pdf_content: str = "") -> Dict:
+def process_full_grant_application(prompt: str, request_data: Dict, pdf_data: Dict = None) -> Dict:
     """Process full grant application using General Manager + Specialists"""
     
     logging.info('🧠 Processing full grant application with multi-agent system')
@@ -296,7 +298,7 @@ def process_full_grant_application(prompt: str, request_data: Dict, pdf_content:
     """
     
     # Use GPT-4o for strategic reasoning with multimodal capabilities
-    gm_result = call_ai_foundry_model("gpt-4o", gm_prompt, reasoning_level="high")
+    gm_result = call_ai_foundry_model("gpt-4o", gm_prompt, reasoning_level="high", pdf_data=pdf_data)
     
     if not gm_result.get("success"):
         return {
@@ -333,7 +335,7 @@ def process_full_grant_application(prompt: str, request_data: Dict, pdf_content:
     Create a cohesive, professional response that integrates all specialist insights.
     """
     
-    final_result = call_ai_foundry_model("gpt-4o", synthesis_prompt, reasoning_level="high")
+    final_result = call_ai_foundry_model("gpt-4o", synthesis_prompt, reasoning_level="high", pdf_data=pdf_data)
     
     return {
         "success": True,
@@ -346,15 +348,14 @@ def process_full_grant_application(prompt: str, request_data: Dict, pdf_content:
         "reasoning_level": "advanced_multi_agent"
     }
 
-def process_general_task(prompt: str, max_tokens: int, pdf_content: str = None) -> Dict:
+def process_general_task(prompt: str, max_tokens: int, pdf_data: Dict = None) -> Dict:
     """Process general task with General Manager agent"""
     
-    pdf_context = f"\n\nDocument Content:\n{pdf_content}" if pdf_content else ""
-    
     gm_prompt = f"""
-    You are an expert General Manager AI for grant writing and research. 
+    You are an expert General Manager AI for grant writing and research with advanced multimodal capabilities.
     
-    Task: {prompt}{pdf_context}
+    Task: {prompt}
+    {f"Note: A PDF document has been provided for analysis." if pdf_data else ""}
     
     Provide a comprehensive, professional response drawing on your expertise in:
     - Grant writing and applications
@@ -366,7 +367,7 @@ def process_general_task(prompt: str, max_tokens: int, pdf_content: str = None) 
     Be thorough and actionable.
     """
     
-    result = call_ai_foundry_model("gpt-4o", gm_prompt, max_tokens=max_tokens)
+    result = call_ai_foundry_model("o3", gm_prompt, max_tokens=max_tokens, pdf_data=pdf_data)
     
     return {
         "success": result.get("success", False),
@@ -376,15 +377,14 @@ def process_general_task(prompt: str, max_tokens: int, pdf_content: str = None) 
         "agent_type": "general_manager"
     }
 
-def process_research_task(prompt: str, max_tokens: int, pdf_content: str = None) -> Dict:
+def process_research_task(prompt: str, max_tokens: int, pdf_data: Dict = None) -> Dict:
     """Process research task with specialized Research agent"""
     
-    pdf_context = f"\n\nGrant Document Content:\n{pdf_content}" if pdf_content else ""
-    
     research_prompt = f"""
-    You are a specialized Research Agent for grant opportunities and academic research.
+    You are a specialized Research Agent for grant opportunities and academic research with advanced multimodal capabilities.
     
-    Research Task: {prompt}{pdf_context}
+    Research Task: {prompt}
+    {f"Note: A grant document PDF has been provided for detailed analysis." if pdf_data else ""}
     
     Your expertise includes:
     - Grant opportunity identification and analysis
@@ -396,25 +396,24 @@ def process_research_task(prompt: str, max_tokens: int, pdf_content: str = None)
     Provide detailed, actionable research insights.
     """
     
-    result = call_ai_foundry_model("o4-mini", research_prompt, max_tokens=max_tokens)
+    result = call_ai_foundry_model("o3-mini", research_prompt, max_tokens=max_tokens, pdf_data=pdf_data)
     
     return {
         "success": result.get("success", False),
         "generated_text": result.get("response", ""),
-        "model": "research_agent_o4_mini",
+        "model": "research_agent_o3_mini",
         "service": "AI Foundry Agent Service",
         "agent_type": "research_specialist"
     }
 
-def process_budget_task(prompt: str, max_tokens: int, pdf_content: str = None) -> Dict:
+def process_budget_task(prompt: str, max_tokens: int, pdf_data: Dict = None) -> Dict:
     """Process budget task with specialized Budget agent"""
     
-    pdf_context = f"\n\nGrant Document Content:\n{pdf_content}" if pdf_content else ""
-    
     budget_prompt = f"""
-    You are a specialized Budget Agent for grant applications and financial planning.
+    You are a specialized Budget Agent for grant applications and financial planning with efficient reasoning capabilities.
     
-    Budget Task: {prompt}{pdf_context}
+    Budget Task: {prompt}
+    {f"Note: A grant document PDF has been provided for budget analysis." if pdf_data else ""}
     
     Your expertise includes:
     - Detailed budget creation and justification
@@ -426,25 +425,24 @@ def process_budget_task(prompt: str, max_tokens: int, pdf_content: str = None) -
     Provide comprehensive financial analysis and recommendations.
     """
     
-    result = call_ai_foundry_model("o4-mini", budget_prompt, max_tokens=max_tokens)
+    result = call_ai_foundry_model("o3-mini", budget_prompt, max_tokens=max_tokens, pdf_data=pdf_data)
     
     return {
         "success": result.get("success", False),
         "generated_text": result.get("response", ""),
-        "model": "budget_agent_o4_mini", 
+        "model": "budget_agent_o3_mini", 
         "service": "AI Foundry Agent Service",
         "agent_type": "budget_specialist"
     }
 
-def process_writing_task(prompt: str, max_tokens: int, pdf_content: str = None) -> Dict:
+def process_writing_task(prompt: str, max_tokens: int, pdf_data: Dict = None) -> Dict:
     """Process writing task with specialized Writing agent"""
     
-    pdf_context = f"\n\nGrant Document Content:\n{pdf_content}" if pdf_content else ""
-    
     writing_prompt = f"""
-    You are a specialized Technical Writing Agent for grant proposals and academic writing.
+    You are a specialized Technical Writing Agent for grant proposals and academic writing with superior multimodal capabilities.
     
-    Writing Task: {prompt}{pdf_context}
+    Writing Task: {prompt}
+    {f"Note: A grant document PDF has been provided for comprehensive writing analysis." if pdf_data else ""}
     
     Your expertise includes:
     - Proposal writing and structure
@@ -456,25 +454,24 @@ def process_writing_task(prompt: str, max_tokens: int, pdf_content: str = None) 
     Create professional, compelling, and compliant content.
     """
     
-    result = call_ai_foundry_model("o3-mini", writing_prompt, max_tokens=max_tokens)
+    result = call_ai_foundry_model("gpt-4o", writing_prompt, max_tokens=max_tokens, pdf_data=pdf_data)
     
     return {
         "success": result.get("success", False),
         "generated_text": result.get("response", ""),
-        "model": "writing_agent_o3_mini",
+        "model": "writing_agent_gpt_4o",
         "service": "AI Foundry Agent Service", 
         "agent_type": "writing_specialist"
     }
 
-def process_impact_task(prompt: str, max_tokens: int, pdf_content: str = None) -> Dict:
+def process_impact_task(prompt: str, max_tokens: int, pdf_data: Dict = None) -> Dict:
     """Process impact assessment task with specialized Impact agent"""
     
-    pdf_context = f"\n\nGrant Document Content:\n{pdf_content}" if pdf_content else ""
-    
     impact_prompt = f"""
-    You are a specialized Impact Assessment Agent for grant applications and program evaluation.
+    You are a specialized Impact Assessment Agent for grant applications and program evaluation with efficient analytical reasoning.
     
-    Impact Task: {prompt}{pdf_context}
+    Impact Task: {prompt}
+    {f"Note: A grant document PDF has been provided for impact analysis." if pdf_data else ""}
     
     Your expertise includes:
     - Impact measurement and evaluation frameworks
@@ -486,17 +483,17 @@ def process_impact_task(prompt: str, max_tokens: int, pdf_content: str = None) -
     Develop comprehensive impact assessment strategies.
     """
     
-    result = call_ai_foundry_model("o4-mini", impact_prompt, max_tokens=max_tokens)
+    result = call_ai_foundry_model("o3-mini", impact_prompt, max_tokens=max_tokens, pdf_data=pdf_data)
     
     return {
         "success": result.get("success", False),
         "generated_text": result.get("response", ""),
-        "model": "impact_agent_o4_mini",
+        "model": "impact_agent_o3_mini",
         "service": "AI Foundry Agent Service",
         "agent_type": "impact_specialist"
     }
 
-def call_ai_foundry_model(model: str, prompt: str, max_tokens: int = 500, reasoning_level: str = "medium") -> Dict:
+def call_ai_foundry_model(model: str, prompt: str, max_tokens: int = 500, reasoning_level: str = "medium", pdf_data: Dict = None) -> Dict:
     """
     Call AI Foundry models directly using serverless API
     This bypasses the need for individual agent creation for simple calls
@@ -511,26 +508,28 @@ def call_ai_foundry_model(model: str, prompt: str, max_tokens: int = 500, reason
         
         # Map AI Foundry models to available deployments in your Azure OpenAI resource
         model_mapping = {
-            "gpt-4o": "gpt-4-1106-Preview",   # Use GPT-4 Turbo as best available
-            "o3-mini": "gpt-4-1106-Preview",  # Use GPT-4 Turbo for reasoning tasks
-            "o4-mini": "gpt-35-turbo-1106",   # Use GPT-3.5 Turbo for efficiency
-            "gpt-4.1": "gpt-4-1106-Preview", # Use GPT-4 Turbo as proxy
-            "gpt-5": "gpt-4-1106-Preview"    # Use GPT-4 Turbo as best available
+            "o3": "o3",                       # Use o3 reasoning model for advanced multimodal tasks
+            "o3-mini": "o3-mini",            # Use o3-mini for efficient reasoning
+            "gpt-4o": "gpt-4o",              # Use GPT-4o multimodal for vision tasks
+            "gpt-4.1": "gpt-4-1106-Preview", # Fallback to GPT-4 Turbo if needed
+            "gpt-5": "o3"                    # Use o3 as best available reasoning model
         }
         
-        deployment_model = model_mapping.get(model, "gpt-35-turbo-1106")
+        deployment_model = model_mapping.get(model, "o3")  # Default to o3 for advanced reasoning
         
         # Enhance prompt for reasoning models and strategic tasks
-        if model in ["o3-mini", "o4-mini"]:
+        if model in ["o3", "o3-mini"]:
             enhanced_prompt = f"""
-            You are a reasoning AI model with advanced analytical capabilities. 
-            Think step-by-step and provide comprehensive analysis.
+            You are an advanced reasoning AI model with sophisticated multimodal and analytical capabilities.
+            For o3 model specifically: Use your advanced reasoning to think deeply and systematically.
             
             Reasoning Level: {reasoning_level}
+            Task Context: Grant writing and document analysis
             
             {prompt}
             
-            Provide detailed reasoning and comprehensive response.
+            Provide detailed step-by-step reasoning and comprehensive analysis.
+            For complex grant documents, use both visual and textual understanding.
             """
         elif model == "gpt-4o" and reasoning_level == "high":
             enhanced_prompt = f"""
@@ -546,9 +545,31 @@ def call_ai_foundry_model(model: str, prompt: str, max_tokens: int = 500, reason
         else:
             enhanced_prompt = prompt
         
+        # Prepare message content for multimodal processing
+        if pdf_data and model in ["o3", "o3-mini", "gpt-4o"]:
+            # Multimodal message with PDF content for o3 reasoning models
+            message_content = [
+                {
+                    "type": "text",
+                    "text": enhanced_prompt
+                },
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:{pdf_data['type']};base64,{pdf_data['base64']}"
+                    }
+                }
+            ]
+            logging.info(f'🖼️ Sending multimodal request to {model} with PDF ({pdf_data["size"]} bytes)')
+        else:
+            # Text-only message
+            message_content = enhanced_prompt
+            if pdf_data:
+                logging.info(f'⚠️ PDF provided but {model} may not support multimodal - sending text only')
+
         payload = {
             "messages": [
-                {"role": "user", "content": enhanced_prompt}
+                {"role": "user", "content": message_content}
             ],
             "max_tokens": max_tokens,
             "temperature": 0.7
@@ -677,11 +698,11 @@ def get_specialist_model(specialist: str) -> str:
     """Get optimal model for each specialist agent"""
     
     model_mapping = {
-        'research': 'o4-mini',      # Efficient for research tasks
-        'budget': 'o4-mini',        # Good for numerical analysis
-        'writing': 'o3-mini',       # Better reasoning for complex writing
-        'impact': 'o4-mini',        # Efficient for structured analysis
-        'networking': 'o4-mini'     # Efficient for relationship mapping
+        'research': 'o3-mini',      # Light reasoning for research tasks
+        'budget': 'o3-mini',        # Light reasoning for numerical analysis
+        'writing': 'gpt-4o',        # Superior language + multimodal
+        'impact': 'o3-mini',        # Light reasoning for structured analysis
+        'networking': 'gpt-4o'      # Communication + relationship skills
     }
     
     return model_mapping.get(specialist, 'o3-mini')
@@ -713,8 +734,8 @@ def get_subscription_id() -> str:
 
 def process_pdf_upload(pdf_data: Dict) -> Dict:
     """
-    Process uploaded PDF file and extract text content
-    Supports both base64 encoded data and file paths
+    Process uploaded PDF file for multimodal o3 analysis
+    Prepares PDF data for direct multimodal processing (no text extraction needed)
     """
     try:
         if 'base64' in pdf_data:
@@ -723,40 +744,41 @@ def process_pdf_upload(pdf_data: Dict) -> Dict:
             if pdf_base64.startswith('data:application/pdf;base64,'):
                 pdf_base64 = pdf_base64.split(',')[1]
             
-            pdf_bytes = base64.b64decode(pdf_base64)
-            pdf_file = io.BytesIO(pdf_bytes)
+            # Validate base64 data
+            try:
+                pdf_bytes = base64.b64decode(pdf_base64)
+                if len(pdf_bytes) == 0:
+                    return {"success": False, "error": "Invalid or empty PDF data"}
+                
+                # For multimodal processing, we return the original base64 data
+                return {
+                    "success": True,
+                    "pdf_base64": pdf_base64,
+                    "pdf_type": "base64",
+                    "size_bytes": len(pdf_bytes),
+                    "message": "PDF ready for multimodal o3 analysis"
+                }
+            except Exception as decode_error:
+                return {"success": False, "error": f"Invalid base64 PDF data: {str(decode_error)}"}
             
         elif 'content' in pdf_data:
-            # Handle raw content
-            pdf_file = io.BytesIO(pdf_data['content'])
+            # Handle raw PDF bytes
+            pdf_content = pdf_data['content']
+            if len(pdf_content) == 0:
+                return {"success": False, "error": "Empty PDF content"}
+            
+            # Convert to base64 for multimodal processing
+            pdf_base64 = base64.b64encode(pdf_content).decode('utf-8')
+            return {
+                "success": True,
+                "pdf_base64": pdf_base64,
+                "pdf_type": "converted_to_base64", 
+                "size_bytes": len(pdf_content),
+                "message": "PDF converted to base64 for multimodal o3 analysis"
+            }
             
         else:
-            return {"success": False, "error": "No valid PDF data found"}
-        
-        # Extract text from PDF using PyPDF2
-        reader = PyPDF2.PdfReader(pdf_file)
-        text_content = ""
-        
-        for page_num, page in enumerate(reader.pages):
-            try:
-                page_text = page.extract_text()
-                if page_text.strip():
-                    text_content += f"\n--- Page {page_num + 1} ---\n"
-                    text_content += page_text
-                    text_content += "\n"
-            except Exception as page_error:
-                logging.warning(f"Error extracting text from page {page_num + 1}: {str(page_error)}")
-                continue
-        
-        if not text_content.strip():
-            return {"success": False, "error": "No text content could be extracted from PDF"}
-        
-        return {
-            "success": True,
-            "content": text_content.strip(),
-            "pages": len(reader.pages),
-            "characters": len(text_content)
-        }
+            return {"success": False, "error": "No valid PDF data found (expected 'base64' or 'content' field)"}
         
     except Exception as e:
         logging.error(f"PDF processing error: {str(e)}")
