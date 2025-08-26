@@ -15,7 +15,7 @@ from datetime import datetime
 # For LLM integration - using free Hugging Face API
 import requests
 
-def call_local_gemma_model(prompt: str) -> dict:
+def call_local_gemma_model(prompt: str, processing_mode: str = 'azure-deepseek') -> dict:
     """Call AI Foundry Agent Service - Multi-Agent Intelligence"""
     
     # Connect to AI Foundry Agent Orchestrator for intelligent multi-agent processing
@@ -40,8 +40,13 @@ def call_local_gemma_model(prompt: str) -> dict:
         import time
         import random
         
-        # Connect to Enhanced Multi-Agent Orchestrator with DeepSeek R1 + Web Crawling
-        proxy_url = 'https://ocp10-grant-functions.azurewebsites.net/api/EnhancedAgentOrchestrator'
+        # Connect to appropriate orchestrator based on processing mode
+        if processing_mode == 'azure-deepseek':
+            proxy_url = 'https://ocp10-grant-functions.azurewebsites.net/api/EnhancedAgentOrchestrator'
+        elif processing_mode == 'o3-multimodal':
+            proxy_url = 'https://ocp10-grant-functions.azurewebsites.net/api/O3MultimodalProcessor'  # Future implementation
+        else:  # quick-fill or default
+            proxy_url = 'https://ocp10-grant-functions.azurewebsites.net/api/ModelProxy'
         
         # Implement retry logic for rate limiting (HTTP 429)
         max_retries = 3
@@ -301,7 +306,7 @@ Extract these fields as JSON:
 
 Return only valid JSON."""
             
-            result = call_local_gemma_model(prompt)
+            result = call_local_gemma_model(prompt, 'azure-deepseek')  # Use enhanced system for data extraction
             
             if not result["success"]:
                 raise Exception(f"Local Gemma model failed: {result.get('error')} (Type: {result.get('error_type')})")
@@ -400,6 +405,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         pdf_data = req_body.get('pdf_data')
         ngo_profile = req_body.get('ngo_profile', {})
         grant_context = req_body.get('grant_context', {})
+        processing_mode = req_body.get('processing_mode', 'azure-deepseek')  # Default to enhanced system
         data_sources = req_body.get('data_sources', {})
         ngo_profile_pdf = req_body.get('ngo_profile_pdf')
         
@@ -415,8 +421,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         enhanced_ngo_profile = enhance_ngo_profile(ngo_profile, data_sources, ngo_profile_pdf)
         logging.info("NGO profile enhancement completed")
         
-        # Process the grant form filling
-        result = process_grant_form(pdf_data, enhanced_ngo_profile, grant_context)
+        # Process the grant form filling with selected processing mode
+        result = process_grant_form(pdf_data, enhanced_ngo_profile, grant_context, processing_mode)
         
         return func.HttpResponse(
             json.dumps(result),
@@ -432,7 +438,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             mimetype="application/json"
         )
 
-def process_grant_form(pdf_data: str, enhanced_ngo_profile: Dict, grant_context: Dict) -> Dict:
+def process_grant_form(pdf_data: str, enhanced_ngo_profile: Dict, grant_context: Dict, processing_mode: str = 'azure-deepseek') -> Dict:
     """
     Process grant form filling workflow
     """
@@ -445,9 +451,9 @@ def process_grant_form(pdf_data: str, enhanced_ngo_profile: Dict, grant_context:
         classified_fields = classify_form_fields(form_fields)
         logging.info(f"Classified fields: {classified_fields}")
         
-        # Step 3: Generate responses using LLM
-        # Generate responses using Gemma API - NO FALLBACKS for debugging
-        filled_responses = generate_field_responses(classified_fields, enhanced_ngo_profile, grant_context)
+        # Step 3: Generate responses using LLM with selected processing mode
+        # Generate responses using selected orchestrator - NO FALLBACKS for debugging
+        filled_responses = generate_field_responses(classified_fields, enhanced_ngo_profile, grant_context, processing_mode)
         logging.info(f"Generated responses: {filled_responses}")
         
         # Step 4: Generate filled PDF using proper PDF generation
@@ -680,7 +686,7 @@ def classify_form_fields(form_fields: List[Dict]) -> Dict[str, List[Dict]]:
     
     return categories
 
-def generate_field_responses(classified_fields: Dict, enhanced_ngo_profile: Dict, grant_context: Dict) -> Dict[str, str]:
+def generate_field_responses(classified_fields: Dict, enhanced_ngo_profile: Dict, grant_context: Dict, processing_mode: str = 'azure-deepseek') -> Dict[str, str]:
     """
     Generate appropriate responses for each field using LLM with sequential processing to avoid rate limits
     """
@@ -720,7 +726,7 @@ IMPORTANT: Provide only the actual content for this field. Do not include the fi
                     logging.info(f"🐛 DEBUG - PROMPT FOR FIELD '{field_name}' (first 500 chars):")
                     logging.info(f"🐛 {full_prompt[:500]}...")
                     
-                    result = call_local_gemma_model(full_prompt)
+                    result = call_local_gemma_model(full_prompt, processing_mode)
                     
                     if not result["success"]:
                         raise Exception(f"Local Gemma model failed for field {field_name}: {result.get('error')} (Type: {result.get('error_type')})")

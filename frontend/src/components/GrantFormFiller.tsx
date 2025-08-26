@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, Upload, Wand2, Download, AlertCircle, CheckCircle, Globe, FileUp, Eye } from 'lucide-react';
 import { useGrants } from '../contexts/GrantContext';
+import DocumentProcessorSelector from './DocumentProcessorSelector';
 
 interface NGOProfile {
   organization_name: string;
@@ -73,6 +74,7 @@ export const GrantFormFiller: React.FC<GrantFormFillerProps> = ({ grantId }) => 
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState<FilledFormResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [processingMode, setProcessingMode] = useState<string>('azure-deepseek'); // Default to enhanced system
   
   // New multi-source NGO data - Demo-ready defaults (Teach for America)
   const [ngoDataSources, setNgoDataSources] = useState<NGODataSources>({
@@ -220,6 +222,7 @@ export const GrantFormFiller: React.FC<GrantFormFillerProps> = ({ grantId }) => 
         pdf_data: pdfData,
         ngo_profile: ngoProfileData,
         grant_context: grantContext,
+        processing_mode: processingMode, // Add processing mode selection
         data_sources: {
           has_profile_pdf: activeDataSources.pdf && ngoDataSources.profile_pdf,
           has_website: activeDataSources.website && ngoDataSources.website_url,
@@ -371,7 +374,15 @@ export const GrantFormFiller: React.FC<GrantFormFillerProps> = ({ grantId }) => 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div className="flex items-center space-x-3 mb-6">
           <Wand2 className="w-6 h-6 text-purple-600" />
-          <h2 className="text-2xl font-bold text-gray-900">AI Grant Form Filler (Azure ML)</h2>
+          <h2 className="text-2xl font-bold text-gray-900">AI Grant Form Filler (Enhanced Multi-Agent)</h2>
+        </div>
+
+        {/* Processing Mode Selector */}
+        <div className="mb-6">
+          <DocumentProcessorSelector
+            selectedMode={processingMode}
+            onModeChange={setProcessingMode}
+          />
         </div>
 
         {/* NGO Profile Section - Multi-Source */}
