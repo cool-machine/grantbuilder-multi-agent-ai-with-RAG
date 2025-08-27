@@ -33,20 +33,28 @@ class AzureBingGrounding:
     """Direct Azure Bing Search API implementation"""
     
     def __init__(self):
-        # Direct Bing Search API Configuration
-        self.bing_search_key = os.getenv('BING_SEARCH_KEY', '')
-        self.bing_search_endpoint = "https://api.bing.microsoft.com/v7.0/search"
+        # Azure AI Foundry Configuration
+        self.project_client = None
+        try:
+            from azure.ai.projects import AIProjectClient
+            from azure.identity import DefaultAzureCredential
+            
+            # Initialize AI Foundry Project Client for Bing Search Grounding
+            self.project_client = AIProjectClient.from_connection_string(
+                conn_str=os.getenv('AZURE_AI_PROJECT_CONNECTION_STRING', ''),
+                credential=DefaultAzureCredential()
+            )
+            logging.info("🔍 Azure AI Foundry Bing Search Grounding initialized successfully")
+        except ImportError as e:
+            logging.error(f"DEBUG: Azure AI Projects SDK import failed: {e}")
+        except Exception as e:
+            logging.error(f"DEBUG: Azure AI Foundry client initialization failed: {e}")
         
         # Bing Search Configuration
         self.default_count = 5
         self.max_count = 10
         self.default_market = "en-US"
         self.default_freshness = None
-        
-        if self.bing_search_key:
-            logging.info("🔍 Azure Bing Search API initialized successfully")
-        else:
-            logging.warning("🔍 Bing Search API key not found - search will be limited")
         
     async def web_search(self, query: str, count: int = None, market: str = None, freshness: str = None) -> BingSearchResponse:
         """
@@ -61,63 +69,101 @@ class AzureBingGrounding:
         import time
         start_time = time.time()
         
-        if not self.bing_search_key:
+        if not self.project_client:
             return BingSearchResponse(
                 query=query,
                 results=[],
                 total_results=0,
                 search_time=time.time() - start_time,
                 success=False,
-                error_message="DEBUG: BING_SEARCH_KEY environment variable not set. Azure Bing Search API key required."
+                error_message="DEBUG: Azure AI Foundry Project Client not initialized. Check AZURE_AI_PROJECT_CONNECTION_STRING and credentials."
             )
         
         try:
-            # Set search parameters
+            # Set search parameters for AI Foundry Bing Grounding
             search_params = {
-                "q": query,
+                "query": query,
                 "count": min(count or self.default_count, self.max_count),
-                "mkt": market or self.default_market,
-                "responseFilter": "Webpages"
+                "market": market or self.default_market
             }
             
             if freshness:
                 search_params["freshness"] = freshness
                 
-            logging.info(f"DEBUG: Direct Bing Search API call: query='{query}', endpoint='{self.bing_search_endpoint}', params={search_params}")
+            logging.info(f"DEBUG: Azure AI Foundry Bing Search: query='{query}', params={search_params}")
             
-            # Headers for Bing Search API
-            headers = {
-                "Ocp-Apim-Subscription-Key": self.bing_search_key,
-                "Content-Type": "application/json"
-            }
-            
-            # Make direct API call to Bing Search
-            response = requests.get(
-                self.bing_search_endpoint,
-                headers=headers,
-                params=search_params,
-                timeout=30
+            # Create agent with Bing grounding tool
+            agent = self.project_client.agents.create_agent(
+                model="gpt-4o",  # Use reliable model
+                name=f"search-agent-{int(time.time())}",
+                instructions="You are a web search assistant. Use the Bing search grounding tool to find information and return structured results.",
+                tools=[
+                    {
+                        "type": "bing_grounding",
+                        "bing_grounding": search_params
+                    }
+                ]
             )
             
-            logging.info(f"DEBUG: Bing Search API response status: {response.status_code}")
+            # Create thread and run search
+            thread = self.project_client.agents.create_thread()
             
-            if response.status_code != 200:
-                raise Exception(f"Bing Search API returned status {response.status_code}: {response.text}")
+            # Send search request
+            message = self.project_client.agents.create_message(
+                thread_id=thread.id,
+                role="user", 
+                content=f"Search for: {query}"
+            )
             
-            search_data = response.json()
+            # Execute search
+            run = self.project_client.agents.create_run(
+                thread_id=thread.id,
+                agent_id=agent.id
+            )
             
-            # Extract webpages from response
+            # Wait for completion (with timeout)
+            timeout = 30  # 30 second timeout
+            elapsed = 0
+            while run.status in ["queued", "in_progress", "running"] and elapsed < timeout:
+                await asyncio.sleep(1)
+                run = self.project_client.agents.get_run(
+                    thread_id=thread.id,
+                    run_id=run.id
+                )
+                elapsed += 1
+            
+            if run.status != "completed":
+                raise Exception(f"DEBUG: AI Foundry search run failed or timed out. Status: {run.status}, elapsed: {elapsed}s")
+            
+            # Get search results from run steps
+            run_steps = self.project_client.agents.list_run_steps(
+                thread_id=thread.id,
+                run_id=run.id
+            )
+            
             results = []
-            if "webPages" in search_data and "value" in search_data["webPages"]:
-                for result in search_data["webPages"]["value"]:
-                    results.append(BingSearchResult(
-                        title=result.get('name', ''),
-                        content=result.get('snippet', ''),
-                        url=result.get('url', ''),
-                        display_url=result.get('displayUrl', '')
-                    ))
+            for step in run_steps.data:
+                if hasattr(step, 'step_details') and hasattr(step.step_details, 'tool_calls'):
+                    for tool_call in step.step_details.tool_calls:
+                        if tool_call.type == "bing_grounding":
+                            # Extract Bing search results from AI Foundry
+                            search_results = tool_call.bing_grounding.results
+                            for result in search_results:
+                                results.append(BingSearchResult(
+                                    title=result.get('title', ''),
+                                    content=result.get('snippet', ''),
+                                    url=result.get('url', ''),
+                                    display_url=result.get('displayUrl', '')
+                                ))
             
-            logging.info(f"DEBUG: Bing Search extracted {len(results)} results")
+            # Cleanup - delete temporary agent and thread
+            try:
+                self.project_client.agents.delete_agent(agent.id)
+                self.project_client.agents.delete_thread(thread.id)
+            except:
+                pass  # Ignore cleanup errors
+            
+            logging.info(f"DEBUG: Azure AI Foundry Bing Search extracted {len(results)} results")
             
             search_time = time.time() - start_time
             

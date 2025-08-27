@@ -18,8 +18,8 @@ azure-cosmos>=4.5.0
 azure-ai-formrecognizer>=3.3.0
 azure-cognitiveservices-vision-computervision>=0.9.0
 
-# Direct Bing Search API - no SDK dependencies needed
-# Using direct REST API calls with requests library
+# Azure AI Foundry with Bing Search Grounding
+azure-ai-projects>=1.0.0
 
 # Basic multi-agent dependencies (minimal versions)
 dataclasses-json>=0.6.0
