@@ -590,207 +590,209 @@ SUCCESS FACTORS FOR {org_name}:
             return f"📋 CUSTOMIZED PLAN FOR {org_name}: {task.description} tailored to {org_name}'s {focus_areas} work with {target_population} for {grant_title}"
     
     async def _perform_web_search(self, query: str) -> str:
-        """Multi-tier web search: Google → Bing → Brave → Fallback"""
-        import requests
-        import json
-        import os
+        """Azure Bing Search grounding - enterprise reliability"""
+        return await self._try_azure_bing_search(query)
         
-        # Try Google Custom Search API first (100 free/day)
-        google_result = await self._try_google_search(query)
-        if google_result and not google_result.startswith("🔍 SEARCH ERROR"):
-            return google_result
-            
-        # Try Bing Search API (1000 free/day if we had a key)
-        bing_result = await self._try_bing_search(query)
-        if bing_result and not bing_result.startswith("🔍 SEARCH ERROR"):
-            return bing_result
-            
-        # Try Brave Search API (2000 free/month if we had a key) 
-        brave_result = await self._try_brave_search(query)
-        if brave_result and not brave_result.startswith("🔍 SEARCH ERROR"):
-            return brave_result
-            
-        # Fallback to intelligent analysis
-        return await self._fallback_research(query)
+    # COMMENTED OUT - Previous API-based search methods (no working API keys)
+    # async def _perform_web_search_OLD(self, query: str) -> str:
+    #     """Multi-tier web search: Google → Bing → Brave → Fallback"""
+    #     import requests
+    #     import json
+    #     import os
+    #     
+    #     # Try Google Custom Search API first (100 free/day)
+    #     google_result = await self._try_google_search(query)
+    #     if google_result and not google_result.startswith("🔍 SEARCH ERROR"):
+    #         return google_result
+    #         
+    #     # Try Bing Search API (1000 free/day if we had a key)
+    #     bing_result = await self._try_bing_search(query)
+    #     if bing_result and not bing_result.startswith("🔍 SEARCH ERROR"):
+    #         return bing_result
+    #         
+    #     # Try Brave Search API (2000 free/month if we had a key) 
+    #     brave_result = await self._try_brave_search(query)
+    #     if brave_result and not brave_result.startswith("🔍 SEARCH ERROR"):
+    #         return brave_result
+    #         
+    #     # Fallback to intelligent analysis
+    #     return await self._fallback_research(query)
     
-    async def _try_google_search(self, query: str) -> str:
-        """Try Google Custom Search API"""
+    # COMMENTED OUT - Google Search API (no working API key)
+    # async def _try_google_search(self, query: str) -> str:
+    #     """Try Google Custom Search API"""
+    #     try:
+    #         import requests
+    #         import os
+    #         
+    #         google_key = os.getenv('GOOGLE_CUSTOM_SEARCH_KEY')
+    #         google_cx = os.getenv('GOOGLE_CUSTOM_SEARCH_CX')
+    #         
+    #         if not google_key or not google_cx:
+    #             return "🔍 SEARCH ERROR: Google API credentials not configured"
+    #         
+    #         search_url = "https://www.googleapis.com/customsearch/v1"
+    #         params = {
+    #             "key": google_key,
+    #             "cx": google_cx, 
+    #             "q": query,
+    #             "num": 3
+    #         }
+    #         
+    #         response = requests.get(search_url, params=params, timeout=10)
+    #         
+    #         if response.status_code == 200:
+    #             results = response.json()
+    #             search_summary = f"🔍 GOOGLE SEARCH RESULTS for '{query}':\n"
+    #             
+    #             if "items" in results:
+    #                 for i, result in enumerate(results["items"][:3], 1):
+    #                     title = result.get("title", "")
+    #                     snippet = result.get("snippet", "")
+    #                     url = result.get("link", "")
+    #                     search_summary += f"  {i}. {title}\n     {snippet}\n     {url}\n\n"
+    #             else:
+    #                 search_summary += "No specific results found.\n"
+    #             
+    #             search_summary += f"🔍 SOURCE: Google Custom Search API\n"
+    #             return search_summary
+    #             
+    #         elif response.status_code == 403:
+    #             return "🔍 SEARCH ERROR: Google API quota exceeded"
+    #         else:
+    #             return f"🔍 SEARCH ERROR: Google API status {response.status_code}"
+    #             
+    #     except Exception as e:
+    #         return f"🔍 SEARCH ERROR: Google API - {str(e)}"
+    
+    # COMMENTED OUT - Bing Search API (no working API key)
+    # async def _try_bing_search(self, query: str) -> str:
+    #     """Try Bing Web Search API"""
+    #     try:
+    #         import requests
+    #         import os
+    #         
+    #         bing_key = os.getenv('BING_SEARCH_KEY')
+    #         
+    #         if not bing_key:
+    #             return "🔍 SEARCH ERROR: Bing API key not configured"
+    #         
+    #         search_url = "https://api.bing.microsoft.com/v7.0/search"
+    #         headers = {
+    #             "Ocp-Apim-Subscription-Key": bing_key,
+    #             "Accept": "application/json"
+    #         }
+    #         params = {"q": query, "count": 3, "mkt": "en-US"}
+    #         
+    #         response = requests.get(search_url, headers=headers, params=params, timeout=10)
+    #         
+    #         if response.status_code == 200:
+    #             results = response.json()
+    #             search_summary = f"🔍 BING SEARCH RESULTS for '{query}':\n"
+    #             
+    #             if "webPages" in results and "value" in results["webPages"]:
+    #                 for i, result in enumerate(results["webPages"]["value"][:3], 1):
+    #                     title = result.get("name", "")
+    #                     snippet = result.get("snippet", "")
+    #                     url = result.get("url", "")
+    #                     search_summary += f"  {i}. {title}\n     {snippet}\n     {url}\n\n"
+    #             else:
+    #                 search_summary += "No specific results found.\n"
+    #             
+    #             search_summary += f"🔍 SOURCE: Bing Web Search API\n"
+    #             return search_summary
+    #             
+    #         elif response.status_code == 403:
+    #             return "🔍 SEARCH ERROR: Bing API quota exceeded"
+    #         else:
+    #             return f"🔍 SEARCH ERROR: Bing API status {response.status_code}"
+    #             
+    #     except Exception as e:
+    #         return f"🔍 SEARCH ERROR: Bing API - {str(e)}"
+    
+    # COMMENTED OUT - Brave Search API (no working API key)
+    # async def _try_brave_search(self, query: str) -> str:
+    #     """Try Brave Search API"""
+    #     try:
+    #         import requests
+    #         import os
+    #         
+    #         brave_key = os.getenv('BRAVE_SEARCH_API_KEY')
+    #         
+    #         if not brave_key:
+    #             return "🔍 SEARCH ERROR: Brave API key not configured"
+    #         
+    #         search_url = "https://api.search.brave.com/res/v1/web/search"
+    #         headers = {
+    #             "Accept": "application/json",
+    #             "Accept-Encoding": "gzip",
+    #             "X-Subscription-Token": brave_key
+    #         }
+    #         params = {"q": query, "count": 3}
+    #         
+    #         response = requests.get(search_url, headers=headers, params=params, timeout=10)
+    #         
+    #         if response.status_code == 200:
+    #             results = response.json()
+    #             search_summary = f"🔍 BRAVE SEARCH RESULTS for '{query}':\n"
+    #             
+    #             if "web" in results and "results" in results["web"]:
+    #                 for i, result in enumerate(results["web"]["results"][:3], 1):
+    #                     title = result.get("title", "")
+    #                     description = result.get("description", "")
+    #                     url = result.get("url", "")
+    #                     search_summary += f"  {i}. {title}\n     {description}\n     {url}\n\n"
+    #             else:
+    #                 search_summary += "No specific results found.\n"
+    #             
+    #             search_summary += f"🔍 SOURCE: Brave Search API\n"
+    #             return search_summary
+    #             
+    #         elif response.status_code == 403:
+    #             return "🔍 SEARCH ERROR: Brave API quota exceeded"
+    #         else:
+    #             return f"🔍 SEARCH ERROR: Brave API status {response.status_code}"
+    #             
+    #     except Exception as e:
+    #         return f"🔍 SEARCH ERROR: Brave API - {str(e)}"
+    
+    async def _try_azure_bing_search(self, query: str) -> str:
+        """Azure AI Foundry Bing Search grounding - enterprise reliability"""
         try:
-            import requests
+            # Import Azure Bing Grounding
+            import sys
             import os
+            sys.path.append(os.path.dirname(__file__))
+            from azure_bing_grounding import azure_bing_grounding
             
-            google_key = os.getenv('GOOGLE_CUSTOM_SEARCH_KEY')
-            google_cx = os.getenv('GOOGLE_CUSTOM_SEARCH_CX')
+            # Perform search using Azure Bing grounding
+            response = await azure_bing_grounding.web_search(query, count=5)
             
-            if not google_key or not google_cx:
-                return "🔍 SEARCH ERROR: Google API credentials not configured"
-            
-            search_url = "https://www.googleapis.com/customsearch/v1"
-            params = {
-                "key": google_key,
-                "cx": google_cx, 
-                "q": query,
-                "num": 3
-            }
-            
-            response = requests.get(search_url, params=params, timeout=10)
-            
-            if response.status_code == 200:
-                results = response.json()
-                search_summary = f"🔍 GOOGLE SEARCH RESULTS for '{query}':\n"
+            if response.success and response.results:
+                # Format search results
+                search_summary = f"🔍 AZURE BING SEARCH RESULTS for '{query}':\n"
                 
-                if "items" in results:
-                    for i, result in enumerate(results["items"][:3], 1):
-                        title = result.get("title", "")
-                        snippet = result.get("snippet", "")
-                        url = result.get("link", "")
-                        search_summary += f"  {i}. {title}\n     {snippet}\n     {url}\n\n"
-                else:
-                    search_summary += "No specific results found.\n"
+                for i, result in enumerate(response.results, 1):
+                    search_summary += f"  {i}. {result.title}\n"
+                    if result.content:
+                        # Limit snippet length  
+                        snippet = result.content[:200] + "..." if len(result.content) > 200 else result.content
+                        search_summary += f"     {snippet}\n"
+                    if result.url:
+                        search_summary += f"     {result.url}\n\n"
                 
-                search_summary += f"🔍 SOURCE: Google Custom Search API\n"
+                search_summary += f"🔍 SOURCE: Azure AI Foundry Bing Search Grounding\n"
+                search_summary += f"🌐 ENGINE: Microsoft Bing (Enterprise)\n" 
+                search_summary += f"📊 RESULTS: {response.total_results} results\n"
+                search_summary += f"⏱️  SEARCH TIME: {response.search_time:.2f}s\n"
+                search_summary += f"🔒 RELIABILITY: Enterprise Azure hosting\n"
+                
                 return search_summary
-                
-            elif response.status_code == 403:
-                return "🔍 SEARCH ERROR: Google API quota exceeded"
             else:
-                return f"🔍 SEARCH ERROR: Google API status {response.status_code}"
+                return f"ERROR: Azure Bing search failed for query='{query}'. Response success={response.success}, total_results={response.total_results}, search_time={response.search_time:.2f}s, error_message='{response.error_message}'"
                 
         except Exception as e:
-            return f"🔍 SEARCH ERROR: Google API - {str(e)}"
-    
-    async def _try_bing_search(self, query: str) -> str:
-        """Try Bing Web Search API"""
-        try:
-            import requests
-            import os
-            
-            bing_key = os.getenv('BING_SEARCH_KEY')
-            
-            if not bing_key:
-                return "🔍 SEARCH ERROR: Bing API key not configured"
-            
-            search_url = "https://api.bing.microsoft.com/v7.0/search"
-            headers = {
-                "Ocp-Apim-Subscription-Key": bing_key,
-                "Accept": "application/json"
-            }
-            params = {"q": query, "count": 3, "mkt": "en-US"}
-            
-            response = requests.get(search_url, headers=headers, params=params, timeout=10)
-            
-            if response.status_code == 200:
-                results = response.json()
-                search_summary = f"🔍 BING SEARCH RESULTS for '{query}':\n"
-                
-                if "webPages" in results and "value" in results["webPages"]:
-                    for i, result in enumerate(results["webPages"]["value"][:3], 1):
-                        title = result.get("name", "")
-                        snippet = result.get("snippet", "")
-                        url = result.get("url", "")
-                        search_summary += f"  {i}. {title}\n     {snippet}\n     {url}\n\n"
-                else:
-                    search_summary += "No specific results found.\n"
-                
-                search_summary += f"🔍 SOURCE: Bing Web Search API\n"
-                return search_summary
-                
-            elif response.status_code == 403:
-                return "🔍 SEARCH ERROR: Bing API quota exceeded"
-            else:
-                return f"🔍 SEARCH ERROR: Bing API status {response.status_code}"
-                
-        except Exception as e:
-            return f"🔍 SEARCH ERROR: Bing API - {str(e)}"
-    
-    async def _try_brave_search(self, query: str) -> str:
-        """Try Brave Search API"""
-        try:
-            import requests
-            import os
-            
-            brave_key = os.getenv('BRAVE_SEARCH_API_KEY')
-            
-            if not brave_key:
-                return "🔍 SEARCH ERROR: Brave API key not configured"
-            
-            search_url = "https://api.search.brave.com/res/v1/web/search"
-            headers = {
-                "Accept": "application/json",
-                "Accept-Encoding": "gzip",
-                "X-Subscription-Token": brave_key
-            }
-            params = {"q": query, "count": 3}
-            
-            response = requests.get(search_url, headers=headers, params=params, timeout=10)
-            
-            if response.status_code == 200:
-                results = response.json()
-                search_summary = f"🔍 BRAVE SEARCH RESULTS for '{query}':\n"
-                
-                if "web" in results and "results" in results["web"]:
-                    for i, result in enumerate(results["web"]["results"][:3], 1):
-                        title = result.get("title", "")
-                        description = result.get("description", "")
-                        url = result.get("url", "")
-                        search_summary += f"  {i}. {title}\n     {description}\n     {url}\n\n"
-                else:
-                    search_summary += "No specific results found.\n"
-                
-                search_summary += f"🔍 SOURCE: Brave Search API\n"
-                return search_summary
-                
-            elif response.status_code == 403:
-                return "🔍 SEARCH ERROR: Brave API quota exceeded"
-            else:
-                return f"🔍 SEARCH ERROR: Brave API status {response.status_code}"
-                
-        except Exception as e:
-            return f"🔍 SEARCH ERROR: Brave API - {str(e)}"
-    
-    async def _fallback_research(self, query: str) -> str:
-        """Intelligent fallback when all APIs fail"""
-        search_summary = f"🔍 INTELLIGENT RESEARCH ANALYSIS for '{query}':\n"
-        
-        query_lower = query.lower()
-        
-        if "salary" in query_lower or "professional" in query_lower:
-            search_summary += f"  💰 SALARY RESEARCH:\n"
-            search_summary += f"     • National average for related roles: $45,000-75,000 annually\n"
-            search_summary += f"     • Urban areas typically 15-30% higher than national average\n"
-            search_summary += f"     • Non-profit sector averages 10-20% below corporate rates\n"
-            search_summary += f"     Source: Bureau of Labor Statistics trends\n\n"
-            
-        elif "funding" in query_lower or "grant" in query_lower or "foundation" in query_lower:
-            search_summary += f"  📊 FUNDING LANDSCAPE ANALYSIS:\n"
-            search_summary += f"     • Foundation grants typically range $10K-$500K\n"
-            search_summary += f"     • Success rates: 15-25% for first-time applicants\n"
-            search_summary += f"     • Environmental foundations prioritize climate action\n"
-            search_summary += f"     • Funding cycle: 12-18 months application to award\n\n"
-            
-        elif "organization" in query_lower or "nonprofit" in query_lower:
-            search_summary += f"  🏢 COMPETITIVE LANDSCAPE:\n"
-            search_summary += f"     • 1.5M+ nonprofits compete for foundation funding\n"
-            search_summary += f"     • Environmental sector: ~3% of nonprofit organizations\n"
-            search_summary += f"     • Success factors: 3-5 years operational history\n"
-            search_summary += f"     • Key differentiators: measurable impact, partnerships\n\n"
-            
-        elif "budget" in query_lower or "allocation" in query_lower:
-            search_summary += f"  💼 BUDGET BEST PRACTICES:\n"
-            search_summary += f"     • Personnel costs: typically 65-75% of total project budget\n"
-            search_summary += f"     • Program materials/supplies: 15-25% of budget\n"
-            search_summary += f"     • Administrative overhead: 8-15% (funders prefer lower %)\n"
-            search_summary += f"     • Evaluation/reporting: 3-7% for outcome measurement\n\n"
-            
-        else:
-            search_summary += f"  📈 MARKET INTELLIGENCE:\n"
-            search_summary += f"     • Industry trends favor data-driven approaches\n"
-            search_summary += f"     • Competitive landscape shows innovation opportunities\n"
-            search_summary += f"     • Stakeholder engagement critical for success\n"
-            search_summary += f"     • Best practices emphasize measurable outcomes\n\n"
-        
-        search_summary += f"🔍 SOURCE: Knowledge synthesis (APIs unavailable)\n"
-        return search_summary
+            return f"ERROR: Unexpected exception in Azure Bing search for query='{query}'. Exception type: {type(e).__name__}, message: {str(e)}. Check Azure AI Foundry configuration and credentials."
     
     async def _agent_execute_with_mcp_tools(self, task: AgentTask) -> str:
         """Execute with REAL data processing for each agent"""

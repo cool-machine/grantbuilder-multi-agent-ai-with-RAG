@@ -73,20 +73,20 @@ chmod +x deploy_azure_services.sh
 
 ```bash
 # Check compute instance status
-az ml compute show --name langgraph-multi-agents --workspace-name grantseeker-agents --resource-group ocp10
+az ml compute show --name langgraph-multi-agents --workspace-name grantseeker-agents-project --resource-group ocp10
 
 # Start instance if stopped
-az ml compute start --name langgraph-multi-agents --workspace-name grantseeker-agents --resource-group ocp10
+az ml compute start --name langgraph-multi-agents --workspace-name grantseeker-agents-project --resource-group ocp10
 
 # Get SSH connection details
-az ml compute show --name langgraph-multi-agents --workspace-name grantseeker-agents --resource-group ocp10 --query "network_settings.public_ip_address"
+az ml compute show --name langgraph-multi-agents --workspace-name grantseeker-agents-project --resource-group ocp10 --query "network_settings.public_ip_address"
 ```
 
 ### **Step 3: Deploy System to Compute Instance (10 minutes)**
 
 ```bash
 # Get compute instance IP
-COMPUTE_IP=$(az ml compute show --name langgraph-multi-agents --workspace-name grantseeker-agents --resource-group ocp10 --query "network_settings.public_ip_address" -o tsv)
+COMPUTE_IP=$(az ml compute show --name langgraph-multi-agents --workspace-name grantseeker-agents-project --resource-group ocp10 --query "network_settings.public_ip_address" -o tsv)
 
 # SSH into compute instance
 ssh -i ~/Desktop/ocp10.pem -p 50000 azureuser@$COMPUTE_IP

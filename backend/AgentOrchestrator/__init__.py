@@ -147,7 +147,7 @@ def create_agent(name: str, model: str, instructions: str, tools: List[str] = No
     }
     
     # AI Foundry Agent Service endpoint
-    endpoint = f"https://eastus.api.azureml.ms/agents/v1.0/subscriptions/{get_subscription_id()}/resourceGroups/ocp10/providers/Microsoft.MachineLearningServices/workspaces/grantseeker-agents/agents"
+    endpoint = f"https://eastus2.api.azureml.ms/agents/v1.0/subscriptions/{get_subscription_id()}/resourceGroups/ocp10/providers/Microsoft.MachineLearningServices/workspaces/grantseeker-agents-project/agents"
     
     headers = {
         "Authorization": f"Bearer {token}",
@@ -179,7 +179,7 @@ def run_agent(agent_id: str, message: str) -> Dict:
     if not token:
         raise Exception("Failed to get Azure ML authentication token")
     
-    base_endpoint = f"https://eastus.api.azureml.ms/agents/v1.0/subscriptions/{get_subscription_id()}/resourceGroups/ocp10/providers/Microsoft.MachineLearningServices/workspaces/grantseeker-agents"
+    base_endpoint = f"https://eastus2.api.azureml.ms/agents/v1.0/subscriptions/{get_subscription_id()}/resourceGroups/ocp10/providers/Microsoft.MachineLearningServices/workspaces/grantseeker-agents-project"
     
     headers = {
         "Authorization": f"Bearer {token}",
