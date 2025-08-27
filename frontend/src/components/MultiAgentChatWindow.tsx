@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, Users, Vote, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
+import { MessageCircle, Users, Vote, CheckCircle, Clock, AlertTriangle, Copy, Check } from 'lucide-react';
 
 interface ChatMessage {
   timestamp: string;
@@ -22,6 +22,7 @@ const MultiAgentChatWindow: React.FC<MultiAgentChatWindowProps> = ({
   onClose 
 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
+  const [copied, setCopied] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -30,6 +31,35 @@ const MultiAgentChatWindow: React.FC<MultiAgentChatWindowProps> = ({
       chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [chatHistory]);
+
+  const copyAllChat = async () => {
+    const chatText = chatHistory.map(message => {
+      const timestamp = formatTimestamp(message.timestamp);
+      const agentName = getAgentName(message.agent);
+      const icon = getMessageIcon(message.message_type);
+      const taskId = message.task_id ? `#${message.task_id}` : '';
+      const voteResult = message.vote_result ? `[${message.vote_result.toUpperCase()}]` : '';
+      
+      return `${icon} ${agentName} ${taskId}\n${timestamp}\n${message.content}${voteResult ? ' ' + voteResult : ''}\n\n`;
+    }).join('---\n\n');
+
+    try {
+      await navigator.clipboard.writeText(chatText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = chatText;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   const getAgentColor = (agent: string) => {
     const colors = {
@@ -107,6 +137,29 @@ const MultiAgentChatWindow: React.FC<MultiAgentChatWindowProps> = ({
           )}
         </div>
         <div className="flex items-center space-x-2">
+          {chatHistory.length > 0 && (
+            <button
+              onClick={copyAllChat}
+              className={`flex items-center space-x-1 px-2 py-1 text-xs font-medium rounded transition-colors ${
+                copied 
+                  ? 'bg-green-500 text-white' 
+                  : 'bg-purple-500 hover:bg-purple-400 text-white'
+              }`}
+              title="Copy entire chat conversation"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-3 h-3" />
+                  <span>Copied!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3 h-3" />
+                  <span>Copy All</span>
+                </>
+              )}
+            </button>
+          )}
           <button
             onClick={() => setIsExpanded(false)}
             className="text-white hover:text-gray-200 p-1"
