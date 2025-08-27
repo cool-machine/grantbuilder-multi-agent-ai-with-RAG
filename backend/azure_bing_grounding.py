@@ -1,6 +1,6 @@
 """
-Azure AI Foundry Bing Search Grounding Integration
-Replaces SearXNG with reliable Azure-hosted Bing Search
+Azure Bing Search API Integration
+Direct Bing Search API implementation (simplified from AI Projects SDK)
 """
 
 import os
@@ -10,8 +10,6 @@ import json
 import logging
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
-from azure.identity import DefaultAzureCredential
-from azure.ai.projects import AIProjectClient
 
 @dataclass
 class BingSearchResult:
@@ -32,35 +30,23 @@ class BingSearchResponse:
     error_message: str = ""
 
 class AzureBingGrounding:
-    """Azure AI Foundry Bing Search Grounding for reliable web search"""
+    """Direct Azure Bing Search API implementation"""
     
     def __init__(self):
-        # Azure AI Foundry Project Configuration
-        self.subscription_id = os.getenv('AZURE_SUBSCRIPTION_ID', 'f2c67079-16e2-4ab7-82ee-0c438d92b95e')
-        self.resource_group = os.getenv('AZURE_RESOURCE_GROUP', 'ocp10')
-        self.project_name = os.getenv('AZURE_AI_PROJECT_NAME', 'grantseeker-agents-project')
-        self.endpoint = f"https://eastus2.api.azureml.ms"
-        
-        # Initialize Azure AI Project Client
-        try:
-            self.credential = DefaultAzureCredential()
-            self.project_client = AIProjectClient(
-                endpoint=self.endpoint,
-                credential=self.credential,
-                subscription_id=self.subscription_id,
-                resource_group_name=self.resource_group,
-                project_name=self.project_name
-            )
-            logging.info("🔍 Azure Bing Grounding initialized successfully")
-        except Exception as e:
-            logging.error(f"Failed to initialize Azure AI Project Client: {e}")
-            self.project_client = None
+        # Direct Bing Search API Configuration
+        self.bing_search_key = os.getenv('BING_SEARCH_KEY', '')
+        self.bing_search_endpoint = "https://api.bing.microsoft.com/v7.0/search"
         
         # Bing Search Configuration
         self.default_count = 5
-        self.max_count = 10  # Conservative limit for faster responses
+        self.max_count = 10
         self.default_market = "en-US"
-        self.default_freshness = None  # No time restriction by default
+        self.default_freshness = None
+        
+        if self.bing_search_key:
+            logging.info("🔍 Azure Bing Search API initialized successfully")
+        else:
+            logging.warning("🔍 Bing Search API key not found - search will be limited")
         
     async def web_search(self, query: str, count: int = None, market: str = None, freshness: str = None) -> BingSearchResponse:
         """
@@ -75,99 +61,63 @@ class AzureBingGrounding:
         import time
         start_time = time.time()
         
-        if not self.project_client:
+        if not self.bing_search_key:
             return BingSearchResponse(
                 query=query,
                 results=[],
                 total_results=0,
                 search_time=time.time() - start_time,
                 success=False,
-                error_message="Azure AI Project Client not initialized. Check Azure credentials and project configuration."
+                error_message="DEBUG: BING_SEARCH_KEY environment variable not set. Azure Bing Search API key required."
             )
         
         try:
             # Set search parameters
             search_params = {
-                "query": query,
+                "q": query,
                 "count": min(count or self.default_count, self.max_count),
-                "market": market or self.default_market
+                "mkt": market or self.default_market,
+                "responseFilter": "Webpages"
             }
             
             if freshness:
                 search_params["freshness"] = freshness
                 
-            logging.info(f"Azure Bing Search: query='{query}', params={search_params}")
+            logging.info(f"DEBUG: Direct Bing Search API call: query='{query}', endpoint='{self.bing_search_endpoint}', params={search_params}")
             
-            # Create agent with Bing grounding tool
-            agent = self.project_client.agents.create_agent(
-                model="gpt-4o",  # Use reliable model
-                name=f"search-agent-{int(time.time())}",
-                instructions="You are a web search assistant. Use the Bing search tool to find information and return structured results.",
-                tools=[
-                    {
-                        "type": "bing_grounding",
-                        "bing_grounding": search_params
-                    }
-                ]
+            # Headers for Bing Search API
+            headers = {
+                "Ocp-Apim-Subscription-Key": self.bing_search_key,
+                "Content-Type": "application/json"
+            }
+            
+            # Make direct API call to Bing Search
+            response = requests.get(
+                self.bing_search_endpoint,
+                headers=headers,
+                params=search_params,
+                timeout=30
             )
             
-            # Create thread and run search
-            thread = self.project_client.agents.create_thread()
+            logging.info(f"DEBUG: Bing Search API response status: {response.status_code}")
             
-            # Send search request
-            message = self.project_client.agents.create_message(
-                thread_id=thread.id,
-                role="user", 
-                content=f"Search for: {query}"
-            )
+            if response.status_code != 200:
+                raise Exception(f"Bing Search API returned status {response.status_code}: {response.text}")
             
-            # Execute search
-            run = self.project_client.agents.create_run(
-                thread_id=thread.id,
-                agent_id=agent.id
-            )
+            search_data = response.json()
             
-            # Wait for completion (with timeout)
-            timeout = 30  # 30 second timeout
-            elapsed = 0
-            while run.status in ["queued", "in_progress", "running"] and elapsed < timeout:
-                await asyncio.sleep(1)
-                run = self.project_client.agents.get_run(
-                    thread_id=thread.id,
-                    run_id=run.id
-                )
-                elapsed += 1
-            
-            if run.status != "completed":
-                raise Exception(f"Search run failed or timed out. Status: {run.status}, elapsed: {elapsed}s")
-            
-            # Get search results from run steps
-            run_steps = self.project_client.agents.list_run_steps(
-                thread_id=thread.id,
-                run_id=run.id
-            )
-            
+            # Extract webpages from response
             results = []
-            for step in run_steps.data:
-                if hasattr(step, 'step_details') and hasattr(step.step_details, 'tool_calls'):
-                    for tool_call in step.step_details.tool_calls:
-                        if tool_call.type == "bing_grounding":
-                            # Extract Bing search results
-                            search_results = tool_call.bing_grounding.results
-                            for result in search_results:
-                                results.append(BingSearchResult(
-                                    title=result.get('title', ''),
-                                    content=result.get('snippet', ''),
-                                    url=result.get('url', ''),
-                                    display_url=result.get('displayUrl', '')
-                                ))
+            if "webPages" in search_data and "value" in search_data["webPages"]:
+                for result in search_data["webPages"]["value"]:
+                    results.append(BingSearchResult(
+                        title=result.get('name', ''),
+                        content=result.get('snippet', ''),
+                        url=result.get('url', ''),
+                        display_url=result.get('displayUrl', '')
+                    ))
             
-            # Cleanup - delete temporary agent and thread
-            try:
-                self.project_client.agents.delete_agent(agent.id)
-                self.project_client.agents.delete_thread(thread.id)
-            except:
-                pass  # Ignore cleanup errors
+            logging.info(f"DEBUG: Bing Search extracted {len(results)} results")
             
             search_time = time.time() - start_time
             

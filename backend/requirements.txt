@@ -1,44 +1,35 @@
-# Azure Functions Core Requirements
+# Azure Functions Core Requirements (Minimal stable versions)
 azure-functions==1.18.0
 requests==2.31.0
 
-# PDF Processing (Required for FillGrantForm)
+# PDF Processing (Basic versions)
 PyPDF2==3.0.1
 reportlab==4.0.4
 
-# OpenAI Integration (Required for some functions)
+# OpenAI Integration (Stable version)
 openai>=1.52.0
 
-# Azure Services (Required for various functions)
+# Essential Azure Services only
 azure-storage-blob>=12.14.0
 azure-identity>=1.13.0
 azure-cosmos>=4.5.0
 
-# Azure Document Intelligence & Computer Vision (New)
+# Document Intelligence (if needed)
 azure-ai-formrecognizer>=3.3.0
 azure-cognitiveservices-vision-computervision>=0.9.0
 
-# Azure AI Foundry Projects SDK (For Bing Search Grounding)
-azure-ai-projects>=1.0.0
+# Direct Bing Search API - no SDK dependencies needed
+# Using direct REST API calls with requests library
 
-# DeepSeek R1 Multi-Agent System Dependencies
-langgraph>=0.2.0
-langchain>=0.3.0
-langchain-core>=0.3.0
-langchain-community>=0.3.0
+# Basic multi-agent dependencies (minimal versions)
 dataclasses-json>=0.6.0
 pydantic>=2.5.0
-pydantic-core>=2.14.0
 
-# Enhanced Research System Dependencies
+# Web scraping essentials
 beautifulsoup4>=4.12.0
-aiohttp>=3.9.0
 lxml>=5.0.0
-azure-search-documents>=11.4.0
-azure-ai-textanalytics>=5.3.0
-azure-cognitiveservices-search-websearch>=2.0.0
 
-# Core Python Dependencies
-python-dotenv==1.0.0
+# Core dependencies
+python-dotenv>=1.0.0
 
 # Last updated: Mon Aug 25 23:29:05 CEST 2025
