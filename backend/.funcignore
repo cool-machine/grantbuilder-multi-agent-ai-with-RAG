@@ -1,12 +1,20 @@
 # Azure Functions ignore file
+
+# Version control
 .git/
+.gitignore
+*.md
+
+# IDEs and editors  
 .vscode/
 .vs/
+*.swp
+*.swo
+
+# Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-__pycache__
+*.py[cod]
+*$py.class
 *.so
 .Python
 env/
@@ -15,40 +23,83 @@ venv/
 venv*/
 .venv/
 pip-selfcheck.json
-.azure-pipelines/
-.github/
-docs/
+.pytest_cache/
+pytest.ini
+.coverage
+
+# Testing
 tests/
 test_*.py
 *test*.py
 run_tests.py
-pytest.ini
-.pytest_cache/
+test_requirements.txt
+test-*.txt
+conftest.py
+
+# Documentation
 *.md
+README*
+CHANGELOG*
+LICENSE*
+AUTHORS*
+CONTRIBUTORS*
+
+# Configuration files that shouldn't be deployed
+*.yaml
+*.yml
+*.json.template
+*.env*
+.DS_Store
+*.backup
+*backup*
+*_backup*
+
+# Build artifacts
 *.zip
 *.tar.gz
-.DS_Store
-.coverage
-.nyc_output
-node_modules/
+*.whl
 dist/
 build/
+.coverage
+.nyc_output
 *.log
 logs/
-.env.local
-.env.development
-.env.production
+
+# Frontend/Node.js stuff
+grantseeker/
+node_modules/
+package*.json
+*.config.js
+*.config.ts
+tsconfig*.json
+eslint.config.js
+tailwind.config.js
+vite.config.ts
+postcss.config.js
+
+# Docker/deployment configs
 Dockerfile*
 docker-compose*
 deploy/
-grantseeker/
 ai-foundry-configs/
-*.backup
-*backup*
-CLAUDE-dev.md
-FULL_CHAT_HISTORY.md
-PROJECT_MEMORY.md
-TESTING.md
-MISTRAL_DEPLOYMENT.md
-PRODUCTION_DEPLOYMENT_GUIDE.md
-SYSTEM_ARCHITECTURE_OVERVIEW.md
+
+# Azure/cloud configs that shouldn't be in the package
+azure_*.py
+*_mcp_*.py
+integrated_*.py
+inter_agent_*.py
+searxng_*.py
+deepseek_*.py
+system_requirements.txt
+requirements-container.txt
+requirements.txt.mistral
+
+# Service directories we don't need
+CrawlerService/
+
+# Backup function files
+*/__init__backup.py
+*/__init__debug.py  
+*/__init__simple.py
+*/__init___*.py
+*/__init__test.py
