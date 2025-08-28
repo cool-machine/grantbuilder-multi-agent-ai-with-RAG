@@ -21,8 +21,13 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  VITE_AZURE_FUNCTIONS_URL: https://ocp10-grant-functions.azurewebsites.net/api
-  VITE_API_BASE_URL: https://ocp10-grant-functions.azurewebsites.net/api
+  # Split Architecture URLs - 3 separate Function Apps for optimal performance
+  VITE_MULTIAGENT_URL: https://ocp10-multiagent.azurewebsites.net/api
+  VITE_ORCHESTRATOR_URL: https://ocp10-orchestrator.azurewebsites.net/api  
+  VITE_PROXY_URL: https://ocp10-proxy.azurewebsites.net/api
+  # Legacy environment variables (will update frontend to use new split URLs)
+  VITE_AZURE_FUNCTIONS_URL: https://ocp10-multiagent.azurewebsites.net/api
+  VITE_API_BASE_URL: https://ocp10-multiagent.azurewebsites.net/api
 
 jobs:
   build-and-deploy:

@@ -41,8 +41,8 @@ export const GrantAnalyzer: React.FC = () => {
     setError(null);
 
     try {
-      // Call Azure Functions backend - NO FALLBACKS
-      const response = await fetch('https://ocp10-grant-functions.azurewebsites.net/api/AnalyzeGrant', {
+      // Call new MultiAgent framework for comprehensive grant analysis
+      const response = await fetch('https://ocp10-multiagent.azurewebsites.net/api/MultiAgentFramework', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

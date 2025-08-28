@@ -69,8 +69,8 @@ export const DocumentProcessor: React.FC = () => {
     try {
       const documentContent = await convertFileToText(selectedFile);
 
-      // Call Azure Functions backend - NO FALLBACKS
-      const response = await fetch('https://ocp10-grant-functions.azurewebsites.net/api/ProcessDocument', {
+      // Call new MultiAgent framework for comprehensive document processing
+      const response = await fetch('https://ocp10-multiagent.azurewebsites.net/api/MultiAgentFramework', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

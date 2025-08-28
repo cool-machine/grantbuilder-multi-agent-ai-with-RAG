@@ -128,7 +128,7 @@ Write as if you are the applying organization addressing the grant provider.`);
     setUploadedPDFFile(file);
 
     // Check if API base URL is configured
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://ocp10-grant-functions.azurewebsites.net/api';
+    const apiBaseUrl = import.meta.env.VITE_PROXY_URL || 'https://ocp10-proxy.azurewebsites.net/api';
     console.log('Using API Base URL:', apiBaseUrl);
 
     setIsLoading(true);
@@ -356,7 +356,7 @@ Write as if you are the applying organization addressing the grant provider.`);
     setIsLoading(true);
 
     try {
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://ocp10-grant-functions.azurewebsites.net/api';
+      const apiBaseUrl = import.meta.env.VITE_PROXY_URL || 'https://ocp10-proxy.azurewebsites.net/api';
       
       // Prepare request body with PDF file if available
       const requestBody: any = {

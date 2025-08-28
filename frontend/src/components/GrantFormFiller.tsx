@@ -247,12 +247,13 @@ export const GrantFormFiller: React.FC<GrantFormFillerProps> = ({ grantId }) => 
       }
 
       // Call appropriate backend endpoint based on processing mode
-      let apiUrl = 'https://ocp10-grant-functions.azurewebsites.net/api/FillGrantForm';
+      // Updated to use new split architecture for optimal performance
+      let apiUrl = 'https://ocp10-multiagent.azurewebsites.net/api/MultiAgentFramework';
       let requestPayload = requestBody;
       
-      // For multi-agent framework, call directly to bypass routing issues
-      if (processingMode === 'multi-agent-framework') {
-        apiUrl = 'https://ocp10-grant-functions.azurewebsites.net/api/MultiAgentFramework';
+      // All processing now uses the dedicated multi-agent app for best performance
+      if (processingMode === 'multi-agent-framework' || processingMode === 'azure-deepseek' || processingMode === 'quick-fill') {
+        apiUrl = 'https://ocp10-multiagent.azurewebsites.net/api/MultiAgentFramework';
         requestPayload = {
           prompt: `Generate comprehensive grant application for ${ngoProfileData.organization_name}`,
           context: {
