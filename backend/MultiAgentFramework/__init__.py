@@ -590,8 +590,8 @@ SUCCESS FACTORS FOR {org_name}:
             return f"📋 CUSTOMIZED PLAN FOR {org_name}: {task.description} tailored to {org_name}'s {focus_areas} work with {target_population} for {grant_title}"
     
     async def _perform_web_search(self, query: str) -> str:
-        """Azure Bing Search grounding - enterprise reliability"""
-        return await self._try_azure_bing_search(query)
+        """Reliable web search using Google Custom Search (primary) + Brave Search (fallback)"""
+        return await self._try_reliable_web_search(query)
         
     # COMMENTED OUT - Previous API-based search methods (no working API keys)
     # async def _perform_web_search_OLD(self, query: str) -> str:
@@ -756,21 +756,21 @@ SUCCESS FACTORS FOR {org_name}:
     #     except Exception as e:
     #         return f"🔍 SEARCH ERROR: Brave API - {str(e)}"
     
-    async def _try_azure_bing_search(self, query: str) -> str:
-        """Azure AI Foundry Bing Search grounding - enterprise reliability"""
+    async def _try_reliable_web_search(self, query: str) -> str:
+        """Reliable web search using Google Custom Search (primary) + Brave Search (fallback)"""
         try:
-            # Import Azure Bing Grounding
+            # Import reliable web search module
             import sys
             import os
             sys.path.append(os.path.dirname(__file__))
-            from azure_bing_grounding import azure_bing_grounding
+            from reliable_web_search import reliable_web_search
             
-            # Perform search using Azure Bing grounding
-            response = await azure_bing_grounding.web_search(query, count=5)
+            # DEBUG: Performing reliable web search using Google (primary) + Brave (fallback) 
+            response = await reliable_web_search.web_search(query, count=5)
             
             if response.success and response.results:
-                # Format search results
-                search_summary = f"🔍 AZURE BING SEARCH RESULTS for '{query}':\n"
+                # Format search results with debugging info
+                search_summary = f"🔍 RELIABLE WEB SEARCH RESULTS for '{query}' (Source: {response.source_used}):\n"
                 
                 for i, result in enumerate(response.results, 1):
                     search_summary += f"  {i}. {result.title}\n"
@@ -781,18 +781,20 @@ SUCCESS FACTORS FOR {org_name}:
                     if result.url:
                         search_summary += f"     {result.url}\n\n"
                 
-                search_summary += f"🔍 SOURCE: Azure AI Foundry Bing Search Grounding\n"
-                search_summary += f"🌐 ENGINE: Microsoft Bing (Enterprise)\n" 
+                search_summary += f"🔍 SOURCE: {response.source_used}\n"
+                search_summary += f"🌐 ENGINE: Google Custom Search / Brave Search\n" 
                 search_summary += f"📊 RESULTS: {response.total_results} results\n"
                 search_summary += f"⏱️  SEARCH TIME: {response.search_time:.2f}s\n"
-                search_summary += f"🔒 RELIABILITY: Enterprise Azure hosting\n"
+                search_summary += f"📊 REQUESTS MADE: {response.requests_made}\n"
+                search_summary += f"📈 QUOTA USAGE: {response.quota_usage}\n"
+                search_summary += f"🔒 RELIABILITY: Direct API access (99%+ uptime)\n"
                 
                 return search_summary
             else:
-                return f"ERROR: Azure Bing search failed for query='{query}'. Response success={response.success}, total_results={response.total_results}, search_time={response.search_time:.2f}s, error_message='{response.error_message}'"
+                return f"DEBUG: Reliable web search failed for query='{query}'. Response success={response.success}, source_used={response.source_used}, total_results={response.total_results}, search_time={response.search_time:.2f}s, requests_made={response.requests_made}, quota_usage='{response.quota_usage}', error_message='{response.error_message}'"
                 
         except Exception as e:
-            return f"ERROR: Unexpected exception in Azure Bing search for query='{query}'. Exception type: {type(e).__name__}, message: {str(e)}. Check Azure AI Foundry configuration and credentials."
+            return f"DEBUG: Unexpected exception in reliable web search for query='{query}'. Exception type: {type(e).__name__}, message: {str(e)}. Check Google Custom Search and Brave Search API credentials. Google API key configured: {bool(os.getenv('GOOGLE_CUSTOM_SEARCH_KEY'))}, Google CX configured: {bool(os.getenv('GOOGLE_CUSTOM_SEARCH_CX'))}, Brave API key configured: {bool(os.getenv('BRAVE_SEARCH_API_KEY'))}"
     
     async def _agent_execute_with_mcp_tools(self, task: AgentTask) -> str:
         """Execute with REAL data processing for each agent"""
