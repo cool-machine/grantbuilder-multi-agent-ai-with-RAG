@@ -590,7 +590,7 @@ SUCCESS FACTORS FOR {org_name}:
             return f"📋 CUSTOMIZED PLAN FOR {org_name}: {task.description} tailored to {org_name}'s {focus_areas} work with {target_population} for {grant_title}"
     
     async def _perform_web_search(self, query: str) -> str:
-        """Reliable web search using Google Custom Search (primary) + Brave Search (fallback)"""
+        """Reliable web search using Brave Search (primary) + Google Custom Search (fallback)"""
         return await self._try_reliable_web_search(query)
         
     # COMMENTED OUT - Previous API-based search methods (no working API keys)
@@ -757,7 +757,10 @@ SUCCESS FACTORS FOR {org_name}:
     #         return f"🔍 SEARCH ERROR: Brave API - {str(e)}"
     
     async def _try_reliable_web_search(self, query: str) -> str:
-        """Reliable web search using Google Custom Search (primary) + Brave Search (fallback)"""
+        """Reliable web search using Brave Search (primary) + Google Custom Search (fallback)
+        
+        NOTE: Brave is primary due to Azure Functions dynamic IP addresses causing Google API restrictions
+        """
         try:
             # Import reliable web search module
             import sys
@@ -765,7 +768,7 @@ SUCCESS FACTORS FOR {org_name}:
             sys.path.append(os.path.dirname(__file__))
             from reliable_web_search import reliable_web_search
             
-            # DEBUG: Performing reliable web search using Google (primary) + Brave (fallback) 
+            # DEBUG: Performing reliable web search using Brave (primary) + Google (fallback) 
             response = await reliable_web_search.web_search(query, count=5)
             
             if response.success and response.results:
@@ -782,7 +785,7 @@ SUCCESS FACTORS FOR {org_name}:
                         search_summary += f"     {result.url}\n\n"
                 
                 search_summary += f"🔍 SOURCE: {response.source_used}\n"
-                search_summary += f"🌐 ENGINE: Google Custom Search / Brave Search\n" 
+                search_summary += f"🌐 ENGINE: Brave Search / Google Custom Search\n" 
                 search_summary += f"📊 RESULTS: {response.total_results} results\n"
                 search_summary += f"⏱️  SEARCH TIME: {response.search_time:.2f}s\n"
                 search_summary += f"📊 REQUESTS MADE: {response.requests_made}\n"

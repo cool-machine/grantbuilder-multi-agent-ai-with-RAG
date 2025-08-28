@@ -36,7 +36,10 @@ class WebSearchResponse:
     quota_usage: str = ""  # Usage info (e.g., "Google: 15/100 today, Brave: 5/2000 month")
 
 class ReliableWebSearch:
-    """Google Custom Search (primary) with Brave Search (fallback) implementation"""
+    """Brave Search (primary) with Google Custom Search (fallback) implementation
+    
+    NOTE: Brave is primary due to Azure Functions dynamic IP addresses causing Google API restrictions
+    """
     
     def __init__(self):
         # Google Custom Search Configuration
@@ -56,23 +59,25 @@ class ReliableWebSearch:
         self.google_requests_today = 0
         self.brave_requests_month = 0
         
-        # Log initialization status with quota info
-        if self.google_api_key and self.google_cx:
-            logging.info("🔍 Google Custom Search initialized (FREE: 100/day)")
-        else:
-            logging.warning("⚠️ Google Custom Search not configured")
-            
+        # Log initialization status with quota info (Brave is primary)
         if self.brave_api_key:
-            logging.info("🦁 Brave Search initialized (FREE: 2,000/month)")
+            logging.info("🦁 Brave Search initialized (PRIMARY - FREE: 2,000/month, no IP restrictions)")
         else:
             logging.warning("⚠️ Brave Search not configured")
+            
+        if self.google_api_key and self.google_cx:
+            logging.info("🔍 Google Custom Search initialized (FALLBACK - FREE: 100/day, may fail due to Azure IP restrictions)")
+        else:
+            logging.warning("⚠️ Google Custom Search not configured")
             
         if not (self.google_api_key and self.google_cx) and not self.brave_api_key:
             logging.error("❌ No web search APIs configured - will return empty results")
         
     async def web_search(self, query: str, count: int = None, market: str = None, freshness: str = None) -> WebSearchResponse:
         """
-        Perform web search using Google Custom Search (primary) with Brave Search (fallback)
+        Perform web search using Brave Search (primary) with Google Custom Search (fallback)
+        
+        NOTE: Brave is now primary due to Azure Functions dynamic IP addresses causing Google API restrictions
         
         Args:
             query: Search query string
@@ -83,29 +88,13 @@ class ReliableWebSearch:
         start_time = time.time()
         count = min(count or self.default_count, self.max_count)
         
-        # Try Google Custom Search first
-        if self.google_api_key and self.google_cx:
-            try:
-                logging.info(f"🔍 Trying Google Custom Search for: '{query}'")
-                result = await self._google_search(query, count, market, freshness)
-                if result.success:
-                    result.source_used = "Google Custom Search"
-                    result.requests_made = 1
-                    result.quota_usage = self._get_quota_usage()
-                    logging.info(f"✅ Google search succeeded: {result.total_results} results in {result.search_time:.2f}s")
-                    return result
-                else:
-                    logging.warning(f"⚠️ Google search failed: {result.error_message}")
-            except Exception as e:
-                logging.error(f"❌ Google search exception: {e}")
-        
-        # Fallback to Brave Search
+        # Try Brave Search first (no IP restrictions, works reliably with Azure Functions)
         if self.brave_api_key:
             try:
-                logging.info(f"🦁 Falling back to Brave Search for: '{query}'")
+                logging.info(f"🦁 Trying Brave Search for: '{query}' (Primary - no IP restrictions)")
                 result = await self._brave_search(query, count, market)
                 if result.success:
-                    result.source_used = "Brave Search (fallback)"
+                    result.source_used = "Brave Search (primary)"
                     result.requests_made = 1
                     result.quota_usage = self._get_quota_usage()
                     logging.info(f"✅ Brave search succeeded: {result.total_results} results in {result.search_time:.2f}s")
@@ -114,6 +103,22 @@ class ReliableWebSearch:
                     logging.warning(f"⚠️ Brave search failed: {result.error_message}")
             except Exception as e:
                 logging.error(f"❌ Brave search exception: {e}")
+        
+        # Fallback to Google Custom Search (may fail due to IP restrictions from Azure Functions)
+        if self.google_api_key and self.google_cx:
+            try:
+                logging.info(f"🔍 Falling back to Google Custom Search for: '{query}' (may fail due to Azure IP restrictions)")
+                result = await self._google_search(query, count, market, freshness)
+                if result.success:
+                    result.source_used = "Google Custom Search (fallback)"
+                    result.requests_made = 1
+                    result.quota_usage = self._get_quota_usage()
+                    logging.info(f"✅ Google search succeeded: {result.total_results} results in {result.search_time:.2f}s")
+                    return result
+                else:
+                    logging.warning(f"⚠️ Google search failed: {result.error_message}")
+            except Exception as e:
+                logging.error(f"❌ Google search exception: {e}")
         
         # Both failed or not configured
         search_time = time.time() - start_time
